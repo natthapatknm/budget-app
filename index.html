@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>บัญชีรายรับรายจ่าย</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #f5f3ef;
+  --surface: #ffffff;
+  --surface2: #f0ede8;
+  --border: #e2ddd7;
+  --text: #1a1714;
+  --text2: #6b6560;
+  --text3: #a09890;
+  --green: #2d6a4f;
+  --green-bg: #d8f3dc;
+  --red: #c1440e;
+  --red-bg: #fde8df;
+  --amber: #92600a;
+  --amber-bg: #fef3cd;
+  --blue: #1a4f8a;
+  --blue-bg: #dbeafe;
+  --accent: #c1440e;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Sarabun', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+}
+/* HEADER */
+.header {
+  background: var(--text);
+  color: #fff;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-title { font-size: 16px; font-weight: 600; letter-spacing: 0.02em; }
+.header-sub { font-size: 11px; color: #a09890; font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
+.save-badge {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6);
+  font-family: 'IBM Plex Mono', monospace;
+  transition: all 0.3s;
+  min-width: 80px;
+  text-align: center;
+}
+.save-badge.saved { background: rgba(45,106,79,0.3); color: #86efac; }
+.save-badge.error { background: rgba(193,68,14,0.3); color: #fca5a5; }
+/* NAV */
+.nav {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.nav-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 14px 16px;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text2);
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.nav-btn.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+.nav-btn:hover { background: var(--surface2); }
+/* MAIN */
+.main { max-width: 860px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+.section { display: none; }
+.section.active { display: block; }
+/* METRICS */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+@media(min-width:600px){ .metrics { grid-template-columns: repeat(4,1fr); } }
+.metric {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+.metric-label { font-size: 11px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; margin-bottom: 6px; }
+.metric-value { font-size: 20px; font-weight: 600; line-height: 1.2; }
+.metric-value.g { color: var(--green); }
+.metric-value.r { color: var(--red); }
+.metric-value.b { color: var(--blue); }
+/* CARD */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+  font-family: 'IBM Plex Mono', monospace;
+}
+/* FORM */
+.form-grid { display: grid; gap: 8px; margin-bottom: 10px; }
+.form-2 { grid-template-columns: 1fr 1fr; }
+.form-3 { grid-template-columns: 1fr 1fr 1fr; }
+@media(max-width:480px) { .form-2, .form-3 { grid-template-columns: 1fr; } }
+input, select, textarea {
+  width: 100%;
+  padding: 9px 12px;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+input:focus, select:focus { outline: none; border-color: var(--text); }
+.btn {
+  padding: 9px 18px;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  transition: all 0.15s;
+}
+.btn:hover { background: var(--surface2); }
+.btn.primary { background: var(--text); color: #fff; border-color: var(--text); }
+.btn.primary:hover { background: #333; }
+.btn.danger { color: var(--red); border-color: var(--red-bg); }
+.btn.danger:hover { background: var(--red-bg); }
+.btn.sm { padding: 5px 10px; font-size: 12px; }
+.btn-row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+/* TABLE */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
+th {
+  text-align: left;
+  padding: 8px 10px;
+  color: var(--text3);
+  font-weight: 500;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--surface2); }
+/* BADGE */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.badge.income { background: var(--green-bg); color: var(--green); }
+.badge.expense { background: var(--red-bg); color: var(--red); }
+.badge.pending { background: var(--amber-bg); color: var(--amber); }
+.badge.paid { background: var(--green-bg); color: var(--green); }
+/* PERSON CARDS */
+.person-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+.person-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+.person-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.person-pending { font-size: 19px; font-weight: 600; color: var(--red); font-family: 'IBM Plex Mono', monospace; }
+.person-info { font-size: 11px; color: var(--text3); margin-top: 3px; }
+/* CHART */
+.chart-wrap { position: relative; width: 100%; height: 220px; }
+/* FILTER */
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+.filter-row select, .filter-row input { width: auto; flex: 1; min-width: 120px; }
+/* EMPTY */
+.empty { text-align: center; padding: 2.5rem; color: var(--text3); font-size: 13px; }
+/* AMOUNT */
+.amount-pos { font-weight: 600; color: var(--green); font-family: 'IBM Plex Mono', monospace; }
+.amount-neg { font-weight: 600; color: var(--red); font-family: 'IBM Plex Mono', monospace; }
+.amount-neutral { font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+/* LEGEND */
+.legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; font-size: 12px; color: var(--text2); }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">บัญชีรายรับรายจ่าย</div>
+    <div class="header-sub">BUDGET TRACKER</div>
+  </div>
+  <div class="save-badge" id="save-status">พร้อมใช้งาน</div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="switchTab('dashboard')">ภาพรวม</button>
+  <button class="nav-btn" onclick="switchTab('transactions')">รายรับ-รายจ่าย</button>
+  <button class="nav-btn" onclick="switchTab('reimbursement')">สำรองจ่ายงาน</button>
+</nav>
+
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard" class="section active">
+    <div class="metrics" id="metrics"></div>
+    <div class="card">
+      <div class="card-title">รายรับ vs รายจ่าย — 6 เดือนล่าสุด</div>
+      <div class="chart-wrap">
+        <canvas id="barChart" role="img" aria-label="กราฟแท่งรายรับรายจ่าย 6 เดือนล่าสุด">ข้อมูลรายรับรายจ่าย</canvas>
+      </div>
+      <div class="legend" id="barLegend"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">สัดส่วนรายจ่ายตามหมวดหมู่</div>
+      <div style="position:relative;width:100%;max-width:280px;height:200px;margin:0 auto">
+        <canvas id="pieChart" role="img" aria-label="กราฟวงกลมสัดส่วนรายจ่าย">สัดส่วนรายจ่าย</canvas>
+      </div>
+      <div class="legend" id="pieLegend" style="justify-content:center;margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div id="tab-transactions" class="section">
+    <div class="card">
+      <div class="card-title">เพิ่มรายการใหม่</div>
+      <div class="form-grid form-2">
+        <select id="t-type">
+          <option value="income">รายรับ</option>
+          <option value="expense">รายจ่าย</option>
+        </select>
+        <input type="text" id="t-cat" placeholder="หมวดหมู่ เช่น อาหาร, เงินเดือน">
+      </div>
+      <div class="form-grid form-3">
+        <input type="text" id="t-desc" placeholder="รายละเอียด">
+        <input type="number" id="t-amount" placeholder="จำนวนเงิน (บาท)" min="0">
+        <input type="date" id="t-date">
+      </div>
+      <div class="btn-row">
+        <button class="btn primary" onclick="addTransaction()">+ เพิ่มรายการ</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">รายการทั้งหมด</div>
+      <div class="filter-row">
+        <select id="f-type" onchange="renderTransactions()">
+          <option value="">ทุกประเภท</option>
+          <option value="income">รายรับ</option>
+          <option value="expense">รายจ่าย</option>
+        </select>
+        <input type="month" id="f-month" onchange="renderTransactions()">
+      </div>
+      <div class="table-wrap" id="t-table"></div>
+    </div>
+  </div>
+
+  <!-- REIMBURSEMENT -->
+  <div id="tab-reimbursement" class="section">
+    <div class="card">
+      <div class="card-title">เพิ่มรายการสำรองจ่าย</div>
+      <div class="form-grid form-2">
+        <input type="text" id="r-person" placeholder="ชื่อผู้รับเงิน">
+        <input type="text" id="r-desc" placeholder="รายละเอียด / รายการ">
+      </div>
+      <div class="form-grid form-3">
+        <input type="number" id="r-amount" placeholder="จำนวนเงิน (บาท)" min="0">
+        <input type="date" id="r-date">
+        <input type="text" id="r-note" placeholder="หมายเหตุ (ถ้ามี)">
+      </div>
+      <div class="btn-row">
+        <button class="btn primary" onclick="addReimbursement()">+ เพิ่มรายการ</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">ยอดรวมแต่ละคน</div>
+      <div id="person-summary"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">รายการสำรองจ่ายทั้งหมด</div>
+      <div class="table-wrap" id="r-table"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let transactions = JSON.parse(localStorage.getItem('ball_tx') || '[]');
+let reimbursements = JSON.parse(localStorage.getItem('ball_re') || '[]');
+let barChartInst = null, pieChartInst = null;
+let saveTimer = null;
+
+function saveData() {
+  localStorage.setItem('ball_tx', JSON.stringify(transactions));
+  localStorage.setItem('ball_re', JSON.stringify(reimbursements));
+  showStatus('บันทึกแล้ว', 'saved');
+}
+
+function showStatus(msg, cls) {
+  const el = document.getElementById('save-status');
+  el.textContent = msg;
+  el.className = 'save-badge ' + (cls || '');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    el.textContent = '';
+    el.className = 'save-badge';
+  }, 2000);
+}
+
+function fmt(n) {
+  return Number(n).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+function fmtDate(d) {
+  if (!d) return '';
+  const p = d.split('-');
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+function switchTab(t) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${t}')"]`).classList.add('active');
+  document.getElementById('tab-' + t).classList.add('active');
+  if (t === 'dashboard') renderDashboard();
+  if (t === 'transactions') renderTransactions();
+  if (t === 'reimbursement') renderReimbursement();
+}
+
+function addTransaction() {
+  const type = document.getElementById('t-type').value;
+  const cat = document.getElementById('t-cat').value.trim();
+  const desc = document.getElementById('t-desc').value.trim();
+  const amount = parseFloat(document.getElementById('t-amount').value);
+  const date = document.getElementById('t-date').value;
+  if (!desc || !amount || isNaN(amount) || !date) { alert('กรุณากรอกข้อมูลให้ครบค่ะ'); return; }
+  transactions.unshift({ id: Date.now(), type, cat: cat || 'ทั่วไป', desc, amount, date });
+  saveData();
+  ['t-cat', 't-desc', 't-amount'].forEach(id => document.getElementById(id).value = '');
+  renderTransactions();
+  renderDashboard();
+}
+
+function deleteTransaction(id) {
+  if (!confirm('ลบรายการนี้?')) return;
+  transactions = transactions.filter(t => t.id !== id);
+  saveData(); renderTransactions(); renderDashboard();
+}
+
+function addReimbursement() {
+  const person = document.getElementById('r-person').value.trim();
+  const desc = document.getElementById('r-desc').value.trim();
+  const amount = parseFloat(document.getElementById('r-amount').value);
+  const date = document.getElementById('r-date').value;
+  const note = document.getElementById('r-note').value.trim();
+  if (!person || !desc || !amount || isNaN(amount) || !date) { alert('กรุณากรอกข้อมูลให้ครบค่ะ'); return; }
+  reimbursements.unshift({ id: Date.now(), person, desc, amount, date, note, status: 'pending' });
+  saveData();
+  ['r-person', 'r-desc', 'r-amount', 'r-note'].forEach(id => document.getElementById(id).value = '');
+  renderReimbursement();
+}
+
+function toggleStatus(id) {
+  const r = reimbursements.find(x => x.id === id);
+  if (r) r.status = r.status === 'pending' ? 'paid' : 'pending';
+  saveData(); renderReimbursement();
+}
+
+function deleteReimbursement(id) {
+  if (!confirm('ลบรายการนี้?')) return;
+  reimbursements = reimbursements.filter(r => r.id !== id);
+  saveData(); renderReimbursement();
+}
+
+function renderDashboard() {
+  const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const balance = totalIncome - totalExpense;
+  const pendingReimb = reimbursements.filter(r => r.status === 'pending').reduce((s, r) => s + r.amount, 0);
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">รายรับทั้งหมด</div><div class="metric-value g">฿${fmt(totalIncome)}</div></div>
+    <div class="metric"><div class="metric-label">รายจ่ายทั้งหมด</div><div class="metric-value r">฿${fmt(totalExpense)}</div></div>
+    <div class="metric"><div class="metric-label">คงเหลือสุทธิ</div><div class="metric-value ${balance >= 0 ? 'g' : 'r'}">฿${fmt(balance)}</div></div>
+    <div class="metric"><div class="metric-label">สำรองค้างรับ</div><div class="metric-value b">฿${fmt(pendingReimb)}</div></div>`;
+
+  const now = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'), label: ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()] });
+  }
+  const incData = months.map(m => Math.round(transactions.filter(t => t.type === 'income' && t.date.startsWith(m.key)).reduce((s, t) => s + t.amount, 0)));
+  const expData = months.map(m => Math.round(transactions.filter(t => t.type === 'expense' && t.date.startsWith(m.key)).reduce((s, t) => s + t.amount, 0)));
+
+  if (barChartInst) barChartInst.destroy();
+  barChartInst = new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: { labels: months.map(m => m.label), datasets: [
+      { label: 'รายรับ', data: incData, backgroundColor: '#2d6a4f', borderRadius: 4 },
+      { label: 'รายจ่าย', data: expData, backgroundColor: '#f0997b', borderRadius: 4 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => '฿' + fmt(v) } } } }
+  });
+  document.getElementById('barLegend').innerHTML = `<div class="legend-item"><span class="legend-dot" style="background:#2d6a4f"></span>รายรับ</div><div class="legend-item"><span class="legend-dot" style="background:#f0997b"></span>รายจ่าย</div>`;
+
+  const cats = {};
+  transactions.filter(t => t.type === 'expense').forEach(t => { cats[t.cat] = (cats[t.cat] || 0) + t.amount; });
+  const catKeys = Object.keys(cats);
+  const colors = ['#c1440e','#2d6a4f','#1a4f8a','#92600a','#6b3a7d','#1a6b6b','#7a3f1a','#4a6741'];
+  if (pieChartInst) pieChartInst.destroy();
+  if (catKeys.length > 0) {
+    pieChartInst = new Chart(document.getElementById('pieChart'), {
+      type: 'doughnut',
+      data: { labels: catKeys, datasets: [{ data: catKeys.map(k => Math.round(cats[k])), backgroundColor: catKeys.map((_, i) => colors[i % colors.length]), borderWidth: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+    const total = Object.values(cats).reduce((a, b) => a + b, 0);
+    document.getElementById('pieLegend').innerHTML = catKeys.map((k, i) => `<div class="legend-item"><span class="legend-dot" style="background:${colors[i % colors.length]}"></span>${k} ${total > 0 ? Math.round(cats[k] / total * 100) : 0}%</div>`).join('');
+  } else {
+    document.getElementById('pieLegend').innerHTML = '<span style="color:var(--text3);font-size:13px">ยังไม่มีรายจ่าย</span>';
+  }
+}
+
+function renderTransactions() {
+  const fType = document.getElementById('f-type').value;
+  const fMonth = document.getElementById('f-month').value;
+  let list = transactions.filter(t => {
+    if (fType && t.type !== fType) return false;
+    if (fMonth && !t.date.startsWith(fMonth)) return false;
+    return true;
+  });
+  const el = document.getElementById('t-table');
+  if (!list.length) { el.innerHTML = '<p class="empty">ไม่มีรายการค่ะ</p>'; return; }
+  el.innerHTML = `<table>
+    <thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวดหมู่</th><th>รายละเอียด</th><th style="text-align:right">จำนวน (฿)</th><th></th></tr></thead>
+    <tbody>` + list.map(t => `<tr>
+      <td style="white-space:nowrap">${fmtDate(t.date)}</td>
+      <td><span class="badge ${t.type}">${t.type === 'income' ? 'รายรับ' : 'รายจ่าย'}</span></td>
+      <td>${t.cat}</td>
+      <td>${t.desc}</td>
+      <td style="text-align:right"><span class="${t.type === 'income' ? 'amount-pos' : 'amount-neg'}">${t.type === 'income' ? '+' : '-'}${fmt(t.amount)}</span></td>
+      <td><button class="btn sm danger" onclick="deleteTransaction(${t.id})">ลบ</button></td>
+    </tr>`).join('') + '</tbody></table>';
+}
+
+function renderReimbursement() {
+  const personTotals = {};
+  reimbursements.forEach(r => {
+    if (!personTotals[r.person]) personTotals[r.person] = { total: 0, pending: 0, count: 0 };
+    personTotals[r.person].total += r.amount;
+    personTotals[r.person].count++;
+    if (r.status === 'pending') personTotals[r.person].pending += r.amount;
+  });
+  const names = Object.keys(personTotals);
+  const ps = document.getElementById('person-summary');
+  ps.innerHTML = names.length
+    ? '<div class="person-grid">' + names.map(n => `<div class="person-card">
+        <div class="person-name">${n}</div>
+        <div class="person-pending">฿${fmt(personTotals[n].pending)}</div>
+        <div class="person-info">ค้างรับ / รวม ฿${fmt(personTotals[n].total)} · ${personTotals[n].count} รายการ</div>
+      </div>`).join('') + '</div>'
+    : '<p class="empty">ยังไม่มีรายการค่ะ</p>';
+
+  const el = document.getElementById('r-table');
+  if (!reimbursements.length) { el.innerHTML = '<p class="empty">ยังไม่มีรายการค่ะ</p>'; return; }
+  el.innerHTML = `<table>
+    <thead><tr><th>วันที่</th><th>ชื่อ</th><th>รายละเอียด</th><th>หมายเหตุ</th><th style="text-align:right">จำนวน (฿)</th><th>สถานะ</th><th></th></tr></thead>
+    <tbody>` + reimbursements.map(r => `<tr>
+      <td style="white-space:nowrap">${fmtDate(r.date)}</td>
+      <td style="font-weight:600">${r.person}</td>
+      <td>${r.desc}</td>
+      <td style="color:var(--text3)">${r.note || '-'}</td>
+      <td style="text-align:right"><span class="amount-neutral">฿${fmt(r.amount)}</span></td>
+      <td><button class="btn sm" onclick="toggleStatus(${r.id})" style="${r.status === 'paid' ? 'color:var(--green);border-color:var(--green-bg)' : 'color:var(--amber);border-color:var(--amber-bg)'}">${r.status === 'paid' ? 'รับแล้ว' : 'รอรับ'}</button></td>
+      <td><button class="btn sm danger" onclick="deleteReimbursement(${r.id})">ลบ</button></td>
+    </tr>`).join('') + '</tbody></table>';
+}
+
+// Init
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('t-date').value = today;
+document.getElementById('r-date').value = today;
+document.getElementById('f-month').value = today.substring(0, 7);
+renderDashboard();
+</script>
+</body>
+</html>
