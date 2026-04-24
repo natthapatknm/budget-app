@@ -489,7 +489,7 @@ tr:hover td { background: var(--surface2); }
   <div class="home-content">
     <div class="home-header">
       <div class="home-logo">MY SPACE</div>
-      <div class="home-title">สวัสดี<span> 👋</span></div>
+      <div class="home-title">K'<span>NATTHAPAT</span></div>
       <div class="home-subtitle">personal dashboard</div>
       <div class="home-date" id="home-date"></div>
     </div>
@@ -681,56 +681,29 @@ tr:hover td { background: var(--surface2); }
     <div class="app-header-title">📚 Web Manga</div>
   </div>
   <nav class="inner-nav">
-    <button class="nav-btn active" onclick="switchMangaTab('sites')">เว็บอ่านมังงะ</button>
+    <button class="nav-btn active" onclick="switchMangaTab('sites')">🏆 อันดับ</button>
+    <button class="nav-btn" onclick="switchMangaTab('mylinks')">เว็บของฉัน</button>
     <button class="nav-btn" onclick="switchMangaTab('reading')">กำลังอ่าน</button>
     <button class="nav-btn" onclick="switchMangaTab('add')">+ เพิ่มรายการ</button>
   </nav>
   <div class="scroll-content">
     <div id="mtab-sites" class="inner-section active">
+      <div id="ranking-view"></div>
+    </div>
+    <div id="mtab-mylinks" class="inner-section">
       <div class="card">
-        <div class="card-title">เว็บอ่านมังงะฟรี</div>
-        <div class="manga-links">
-          <a class="manga-link-btn" href="https://mangadex.org" target="_blank">
-            <div class="manga-link-icon">🌐</div>
-            <div class="manga-link-name">MangaDex</div>
-            <div class="manga-link-desc">ฟรี ภาษาไทยมีเยอะ ไม่มีโฆษณา</div>
-          </a>
-          <a class="manga-link-btn" href="https://mangakakalot.com" target="_blank">
-            <div class="manga-link-icon">📖</div>
-            <div class="manga-link-name">MangaKakalot</div>
-            <div class="manga-link-desc">อัปเดตเร็ว มีเยอะมาก</div>
-          </a>
-          <a class="manga-link-btn" href="https://webtoons.com" target="_blank">
-            <div class="manga-link-icon">🎨</div>
-            <div class="manga-link-name">Webtoon</div>
-            <div class="manga-link-desc">เว็บตูน อ่านง่าย มีภาษาไทย</div>
-          </a>
-          <a class="manga-link-btn" href="https://mangaplus.shueisha.co.jp" target="_blank">
-            <div class="manga-link-icon">⭐</div>
-            <div class="manga-link-name">MANGA Plus</div>
-            <div class="manga-link-desc">ของ Shueisha ตอนล่าสุดฟรี</div>
-          </a>
-          <a class="manga-link-btn" href="https://comic.sanook.com" target="_blank">
-            <div class="manga-link-icon">🇹🇭</div>
-            <div class="manga-link-name">Sanook Comic</div>
-            <div class="manga-link-desc">ไทย มังงะ + การ์ตูนไทย</div>
-          </a>
-          <a class="manga-link-btn" href="https://readmanganato.com" target="_blank">
-            <div class="manga-link-icon">📚</div>
-            <div class="manga-link-name">ReadManganato</div>
-            <div class="manga-link-desc">เยอะมาก อัปเดตสม่ำเสมอ</div>
-          </a>
-          <a class="manga-link-btn" href="https://anilist.co" target="_blank">
-            <div class="manga-link-icon">📊</div>
-            <div class="manga-link-name">AniList</div>
-            <div class="manga-link-desc">ติดตาม+รีวิว anime & manga</div>
-          </a>
-          <a class="manga-link-btn" href="https://myanimelist.net" target="_blank">
-            <div class="manga-link-icon">🗂️</div>
-            <div class="manga-link-name">MyAnimeList</div>
-            <div class="manga-link-desc">ฐานข้อมูลมังงะใหญ่ที่สุด</div>
-          </a>
+        <div class="card-title">เพิ่มเว็บอ่านมังงะของฉัน</div>
+        <div class="form-grid form-2">
+          <input type="text" id="ml-name" placeholder="ชื่อเว็บ">
+          <input type="number" id="ml-rank" placeholder="อันดับ (1=อันดับ 1)" min="1" inputmode="numeric">
         </div>
+        <input type="text" id="ml-url" placeholder="URL เช่น https://..." style="margin-bottom:7px">
+        <input type="text" id="ml-desc" placeholder="คำอธิบาย (ถ้ามี)">
+        <div class="btn-row"><button class="btn primary" onclick="addMyLink()">+ เพิ่มเว็บ</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">เว็บของฉัน</div>
+        <div id="mylinks-list"></div>
       </div>
     </div>
     <div id="mtab-reading" class="inner-section">
@@ -746,10 +719,11 @@ tr:hover td { background: var(--surface2); }
     <div id="mtab-add" class="inner-section">
       <div class="card">
         <div class="card-title">เพิ่มมังงะที่กำลังอ่าน</div>
-        <div class="form-grid">
+        <div class="form-grid form-2">
           <input type="text" id="m-title" placeholder="ชื่อมังงะ">
-          <input type="text" id="m-url" placeholder="ลิงก์ (ถ้ามี)">
+          <input type="number" id="m-rank" placeholder="อันดับที่ชอบ (1,2,3...)" min="1" inputmode="numeric">
         </div>
+        <input type="text" id="m-url" placeholder="ลิงก์เว็บอ่าน (ถ้ามี)" style="margin-bottom:7px">
         <div class="form-grid form-2">
           <input type="number" id="m-chapter" placeholder="อ่านถึงตอนที่" min="0" inputmode="numeric">
           <select id="m-status">
@@ -836,12 +810,13 @@ function goTo(app) {
   document.getElementById('page-' + app).classList.add('active');
   if (app === 'budget') { updateCatList(); updatePersonList(); renderBudgetDashboard(); renderTransactions(); }
   if (app === 'todo') renderTodo();
-  if (app === 'manga') renderManga();
+  if (app === 'manga') { renderRanking(); renderManga(); }
 }
 function goHome() {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-home').classList.add('active');
-  renderHomeStats();
+  myLinks = JSON.parse(localStorage.getItem('ball_mylinks')||'[]');
+renderHomeStats();
 }
 
 /* ============================
@@ -850,7 +825,11 @@ function goHome() {
 function renderHomeStats() {
   const totalIncome = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const totalExpense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  const balance = totalIncome - totalExpense;
+  // Balance = only received income minus paid expenses (received!==false means paid/received)
+  const receivedIncome = transactions.filter(t=>t.type==='income'&&t.received!==false).reduce((s,t)=>s+t.amount,0);
+  const paidExpense = transactions.filter(t=>t.type==='expense'&&t.received!==false).reduce((s,t)=>s+t.amount,0);
+  const balance = receivedIncome - paidExpense;
+  const pendingIncome = totalIncome - receivedIncome;
   const pendingTodos = todos.filter(t=>!t.done).length;
   const mangaCount = mangas.length;
   const el = document.getElementById('qs-balance');
@@ -892,10 +871,18 @@ function addTransaction() {
   const amount = parseFloat(document.getElementById('t-amount').value);
   const date = document.getElementById('t-date').value;
   if (!desc || !amount || isNaN(amount) || amount <= 0 || !date) { alert('กรุณากรอกรายละเอียด จำนวนเงิน และวันที่ค่ะ'); return; }
-  transactions.unshift({ id: Date.now(), type, cat: cat||'ทั่วไป', desc, amount, date });
+  // income: รอรับ (received=false) by default, expense: จ่ายแล้ว (received=true) by default
+  const received = type === 'expense' ? true : false;
+  transactions.unshift({ id: Date.now(), type, cat: cat||'ทั่วไป', desc, amount, date, received });
   saveBudget();
   ['t-cat','t-desc','t-amount'].forEach(id => document.getElementById(id).value='');
   updateCatList(); renderTransactions(); renderBudgetDashboard();
+}
+function toggleTxReceived(id) {
+  const t = transactions.find(x=>x.id===id); if(!t) return;
+  t.received = !t.received;
+  saveBudget(); renderTransactions(); renderBudgetDashboard(); myLinks = JSON.parse(localStorage.getItem('ball_mylinks')||'[]');
+renderHomeStats();
 }
 function deleteTransaction(id) {
   if (!confirm('ลบรายการนี้?')) return;
@@ -912,14 +899,26 @@ function renderTransactions() {
   });
   const el = document.getElementById('t-table');
   if (!list.length) { el.innerHTML='<p class="empty">ไม่มีรายการค่ะ</p>'; return; }
-  el.innerHTML = `<table><thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวด</th><th>รายละเอียด</th><th style="text-align:right">฿</th><th></th></tr></thead><tbody>`
-    + list.map(t => `<tr>
-      <td style="white-space:nowrap">${fmtDate(t.date)}</td>
-      <td><span class="badge ${t.type}">${t.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
-      <td>${escHtml(t.cat)}</td><td>${escHtml(t.desc)}</td>
-      <td style="text-align:right"><span class="${t.type==='income'?'amount-pos':'amount-neg'}">${t.type==='income'?'+':'-'}${fmtFull(t.amount)}</span></td>
-      <td><button class="btn sm danger" onclick="deleteTransaction(${t.id})">ลบ</button></td>
-    </tr>`).join('') + '</tbody></table>';
+  el.innerHTML = `<table><thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวด</th><th>รายละเอียด</th><th style="text-align:right">฿</th><th>สถานะ</th><th></th></tr></thead><tbody>`
+    + list.map(t => {
+      // received=true means: income=ได้รับแล้ว, expense=จ่ายแล้ว
+      // received=false means: income=รอรับ, expense=รอจ่าย
+      const isReceived = t.received !== false; // backward compat: old records default true
+      const statusLabel = t.type==='income'
+        ? (isReceived ? 'ได้รับแล้ว' : 'รอรับ')
+        : (isReceived ? 'จ่ายแล้ว' : 'รอจ่าย');
+      const statusStyle = isReceived
+        ? 'color:var(--green);border-color:var(--green-bg)'
+        : 'color:var(--amber);border-color:var(--amber-bg)';
+      return `<tr>
+        <td style="white-space:nowrap">${fmtDate(t.date)}</td>
+        <td><span class="badge ${t.type}">${t.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
+        <td>${escHtml(t.cat)}</td><td>${escHtml(t.desc)}</td>
+        <td style="text-align:right"><span class="${t.type==='income'?'amount-pos':'amount-neg'}">${t.type==='income'?'+':'-'}${fmtFull(t.amount)}</span></td>
+        <td><button class="btn sm" onclick="toggleTxReceived(${t.id})" style="${statusStyle}">${statusLabel}</button></td>
+        <td><button class="btn sm danger" onclick="deleteTransaction(${t.id})">ลบ</button></td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
 }
 
 /* REIMBURSEMENT */
@@ -1071,13 +1070,18 @@ function renderDebt() {
 function renderBudgetDashboard() {
   const totalIncome = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const totalExpense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  const balance = totalIncome - totalExpense;
+  // Balance = only received income minus paid expenses (received!==false means paid/received)
+  const receivedIncome = transactions.filter(t=>t.type==='income'&&t.received!==false).reduce((s,t)=>s+t.amount,0);
+  const paidExpense = transactions.filter(t=>t.type==='expense'&&t.received!==false).reduce((s,t)=>s+t.amount,0);
+  const balance = receivedIncome - paidExpense;
+  const pendingIncome = totalIncome - receivedIncome;
   const pendingReimb = reimbursements.filter(r=>r.status==='pending').reduce((s,r)=>s+r.amount,0);
   const totalDebtLeft = debts.reduce((s,d)=>s+(d.amount-(d.paid||0)),0);
   document.getElementById('b-metrics').innerHTML = `
     <div class="metric"><div class="metric-label">รายรับทั้งหมด</div><div class="metric-value g">฿${fmt(totalIncome)}</div></div>
+    <div class="metric"><div class="metric-label">รอรับอยู่</div><div class="metric-value" style="color:var(--amber)">฿${fmt(pendingIncome)}</div></div>
     <div class="metric"><div class="metric-label">รายจ่ายทั้งหมด</div><div class="metric-value r">฿${fmt(totalExpense)}</div></div>
-    <div class="metric"><div class="metric-label">คงเหลือสุทธิ</div><div class="metric-value ${balance>=0?'g':'r'}">฿${fmt(balance)}</div></div>
+    <div class="metric"><div class="metric-label">คงเหลือจริง</div><div class="metric-value ${balance>=0?'g':'r'}">฿${fmt(balance)}</div></div>
     <div class="metric"><div class="metric-label">สำรองค้างรับ</div><div class="metric-value b">฿${fmt(pendingReimb)}</div></div>
     <div class="metric"><div class="metric-label">หนี้ค้างชำระ</div><div class="metric-value p">฿${fmt(totalDebtLeft)}</div></div>`;
 
@@ -1146,17 +1150,20 @@ function addTodo() {
   todos.unshift({ id: Date.now(), text, cat, done: false, createdAt: new Date().toISOString() });
   localStorage.setItem('ball_todo', JSON.stringify(todos));
   document.getElementById('todo-input').value = '';
-  renderTodo(); renderHomeStats();
+  renderTodo(); myLinks = JSON.parse(localStorage.getItem('ball_mylinks')||'[]');
+renderHomeStats();
 }
 function toggleTodo(id) {
   const t = todos.find(x=>x.id===id); if(t) t.done=!t.done;
   localStorage.setItem('ball_todo', JSON.stringify(todos));
-  renderTodo(); renderHomeStats();
+  renderTodo(); myLinks = JSON.parse(localStorage.getItem('ball_mylinks')||'[]');
+renderHomeStats();
 }
 function deleteTodo(id) {
   todos = todos.filter(t=>t.id!==id);
   localStorage.setItem('ball_todo', JSON.stringify(todos));
-  renderTodo(); renderHomeStats();
+  renderTodo(); myLinks = JSON.parse(localStorage.getItem('ball_mylinks')||'[]');
+renderHomeStats();
 }
 function renderTodo() {
   const allCats = ['ทั้งหมด', ...Object.keys(todoCatColors)];
@@ -1191,7 +1198,9 @@ function switchMangaTab(t) {
   document.querySelectorAll('#page-manga .inner-section').forEach(s=>s.classList.remove('active'));
   document.querySelector(`#page-manga .nav-btn[onclick="switchMangaTab('${t}')"]`).classList.add('active');
   document.getElementById('mtab-'+t).classList.add('active');
+  if(t==='sites') renderRanking();
   if(t==='reading') renderManga();
+  if(t==='mylinks') renderMyLinks();
 }
 function addManga() {
   const title = document.getElementById('m-title').value.trim();
@@ -1199,51 +1208,200 @@ function addManga() {
   const chapter = document.getElementById('m-chapter').value;
   const status = document.getElementById('m-status').value;
   const note = document.getElementById('m-note').value.trim();
+  const rank = document.getElementById('m-rank').value;
   if (!title) { alert('กรุณากรอกชื่อมังงะค่ะ'); return; }
-  mangas.unshift({ id:Date.now(), title, url, chapter:chapter||0, status, note, addedAt:new Date().toISOString() });
+  mangas.unshift({ id:Date.now(), title, url, chapter:chapter||0, status, note, rank:rank?parseInt(rank):null, addedAt:new Date().toISOString() });
   localStorage.setItem('ball_manga', JSON.stringify(mangas));
-  ['m-title','m-url','m-chapter','m-note'].forEach(id=>document.getElementById(id).value='');
+  ['m-title','m-url','m-chapter','m-note','m-rank'].forEach(id=>document.getElementById(id).value='');
   switchMangaTab('reading');
-  renderHomeStats();
+  myLinks = JSON.parse(localStorage.getItem('ball_mylinks')||'[]');
+renderHomeStats();
 }
-function updateMangaChapter(id) {
+function updateMangaChapterInline(id, el) {
   const m = mangas.find(x=>x.id===id); if(!m) return;
-  const ch = prompt('อ่านถึงตอนที่เท่าไหร่แล้ว?', m.chapter||0);
-  if (ch!==null && !isNaN(parseInt(ch))) { m.chapter=parseInt(ch); localStorage.setItem('ball_manga',JSON.stringify(mangas)); renderManga(); }
+  m.chapter = parseInt(el.value)||0;
+  localStorage.setItem('ball_manga',JSON.stringify(mangas));
+}
+function updateMangaRankInline(id, el) {
+  const m = mangas.find(x=>x.id===id); if(!m) return;
+  m.rank = parseInt(el.value)||null;
+  localStorage.setItem('ball_manga',JSON.stringify(mangas));
+}
+function updateMangaStatusInline(id, el) {
+  const m = mangas.find(x=>x.id===id); if(!m) return;
+  m.status = el.value;
+  localStorage.setItem('ball_manga',JSON.stringify(mangas)); renderManga();
 }
 function updateMangaStatus(id, status) {
   const m = mangas.find(x=>x.id===id); if(!m) return;
   m.status=status; localStorage.setItem('ball_manga',JSON.stringify(mangas)); renderManga();
 }
+// My custom links
+let myLinks = JSON.parse(localStorage.getItem('ball_mylinks')||'[]');
+function addMyLink() {
+  const name = document.getElementById('ml-name').value.trim();
+  const url = document.getElementById('ml-url').value.trim();
+  const desc = document.getElementById('ml-desc').value.trim();
+  const rank = parseInt(document.getElementById('ml-rank').value) || null;
+  if (!name||!url) { alert('กรุณากรอกชื่อและ URL ค่ะ'); return; }
+  const fullUrl = url.startsWith('http') ? url : 'https://'+url;
+  myLinks.unshift({ id:Date.now(), name, url:fullUrl, desc, rank });
+  localStorage.setItem('ball_mylinks', JSON.stringify(myLinks));
+  ['ml-name','ml-url','ml-desc','ml-rank'].forEach(id=>document.getElementById(id).value='');
+  renderMyLinks();
+  renderRanking();
+}
+function updateMyLinkRank(id, el) {
+  const l = myLinks.find(x=>x.id===id); if(!l) return;
+  l.rank = parseInt(el.value)||null;
+  localStorage.setItem('ball_mylinks', JSON.stringify(myLinks));
+  renderRanking();
+}
+function deleteMyLink(id) {
+  if(!confirm('ลบเว็บนี้?')) return;
+  myLinks = myLinks.filter(l=>l.id!==id);
+  localStorage.setItem('ball_mylinks', JSON.stringify(myLinks));
+  renderMyLinks(); renderRanking();
+}
+function renderMyLinks() {
+  const el = document.getElementById('mylinks-list');
+  if (!myLinks.length) { el.innerHTML='<p class="empty">ยังไม่มีเว็บที่บันทึกไว้ค่ะ<br><span style="font-size:12px;margin-top:6px;display:block">เพิ่มเว็บแล้วตั้งอันดับ → จะแสดงในหน้า 🏆 อันดับ</span></p>'; return; }
+  // sort by rank first
+  const sorted = [...myLinks].sort((a,b) => {
+    if (a.rank && b.rank) return a.rank - b.rank;
+    if (a.rank) return -1; if (b.rank) return 1;
+    return 0;
+  });
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px">' + sorted.map(l => `
+    <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px">
+      <div style="flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${l.rank?'var(--gold)':'var(--text3)'}">
+        ${l.rank?'#'+l.rank:'—'}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${escHtml(l.name)}</div>
+        <div style="font-size:10px;color:var(--text3)">${l.desc?escHtml(l.desc):l.url.replace('https://','').split('/')[0]}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="number" value="${l.rank||''}" min="1" placeholder="อันดับ" inputmode="numeric"
+          style="width:60px;padding:4px 7px;font-size:12px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--gold);font-family:'IBM Plex Mono',monospace;text-align:center"
+          onchange="updateMyLinkRank(${l.id},this)">
+        <a class="btn sm" href="${escHtml(l.url)}" target="_blank" style="color:var(--blue);border-color:var(--blue-bg);text-decoration:none">เปิด</a>
+        <button onclick="deleteMyLink(${l.id})" class="btn sm danger">ลบ</button>
+      </div>
+    </div>`).join('') + '</div>';
+}
+function renderRanking() {
+  const el = document.getElementById('ranking-view');
+  if (!el) return;
+  // Only show links that have a rank set
+  const ranked = [...myLinks].filter(l=>l.rank).sort((a,b)=>a.rank-b.rank);
+  const unranked = [...myLinks].filter(l=>!l.rank);
+  const rankColors = ['#FFD700','#C0C0C0','#CD7F32'];
+  const rankEmoji = ['🥇','🥈','🥉'];
+
+  if (!myLinks.length) {
+    el.innerHTML = `<div class="card"><div style="text-align:center;padding:2.5rem 1rem">
+      <div style="font-size:40px;margin-bottom:1rem">🏆</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px">ยังไม่มีเว็บในอันดับ</div>
+      <div style="font-size:12px;color:var(--text3)">ไปที่ "เว็บของฉัน" เพิ่มเว็บและตั้งอันดับ</div>
+      <button class="btn primary" onclick="switchMangaTab('mylinks')" style="margin-top:1rem">+ เพิ่มเว็บของฉัน</button>
+    </div></div>`;
+    return;
+  }
+
+  let html = '';
+  if (ranked.length) {
+    html += '<div class="card"><div class="card-title">อันดับเว็บอ่านมังงะของฉัน</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:8px">';
+    html += ranked.map((l,i) => {
+      const isTop3 = l.rank <= 3;
+      const borderColor = isTop3 ? rankColors[l.rank-1] : 'var(--border)';
+      const numDisplay = isTop3 ? rankEmoji[l.rank-1] : '#'+l.rank;
+      return `<a href="${escHtml(l.url)}" target="_blank" style="display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid ${borderColor};border-radius:var(--radius-sm);padding:12px 14px;text-decoration:none;color:var(--text);transition:all 0.15s;${isTop3?'background:var(--surface3)':''}">
+        <div style="flex-shrink:0;font-size:${isTop3?'26px':'14px'};font-weight:700;font-family:'IBM Plex Mono',monospace;color:${isTop3?rankColors[l.rank-1]:'var(--text3)'};width:32px;text-align:center;line-height:1">${numDisplay}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:${isTop3?'15px':'13px'};font-weight:600;margin-bottom:2px">${escHtml(l.name)}</div>
+          <div style="font-size:10px;color:var(--text3)">${l.desc?escHtml(l.desc):l.url.replace('https://','').split('/')[0]}</div>
+        </div>
+        <div style="font-size:11px;color:var(--text3)">เปิด →</div>
+      </a>`;
+    }).join('');
+    html += '</div></div>';
+  }
+
+  if (unranked.length) {
+    html += '<div class="card"><div class="card-title">เว็บอื่นๆ (ยังไม่ได้ตั้งอันดับ)</div>';
+    html += '<div class="manga-links">';
+    html += unranked.map(l => `
+      <a class="manga-link-btn" href="${escHtml(l.url)}" target="_blank">
+        <div class="manga-link-icon">🔗</div>
+        <div class="manga-link-name">${escHtml(l.name)}</div>
+        <div class="manga-link-desc">${l.desc?escHtml(l.desc):l.url.replace('https://','').split('/')[0]}</div>
+      </a>`).join('');
+    html += '</div></div>';
+  }
+
+  el.innerHTML = html || `<div class="card"><div style="text-align:center;padding:2rem">
+    <div style="font-size:13px;color:var(--text3)">ยังไม่มีเว็บที่ตั้งอันดับ<br>ไปที่ "เว็บของฉัน" เพื่อตั้งอันดับ</div>
+    <button class="btn primary" onclick="switchMangaTab('mylinks')" style="margin-top:1rem">ตั้งอันดับ →</button>
+  </div></div>`;
+}
 function deleteManga(id) {
   if(!confirm('ลบมังงะนี้?')) return;
   mangas = mangas.filter(m=>m.id!==id);
-  localStorage.setItem('ball_manga',JSON.stringify(mangas)); renderManga(); renderHomeStats();
+  localStorage.setItem('ball_manga',JSON.stringify(mangas)); renderManga(); myLinks = JSON.parse(localStorage.getItem('ball_mylinks')||'[]');
+renderHomeStats();
 }
 function renderManga() {
-  const statusLabels = { reading:'กำลังอ่าน', finished:'อ่านจบแล้ว', paused:'พักไว้ก่อน' };
-  const statusColors = { reading:'var(--gold)', finished:'var(--green)', paused:'var(--text3)' };
+  // sort by rank if available, then by addedAt
+  const sortedMangas = [...mangas].sort((a,b)=>{
+    if (a.rank && b.rank) return a.rank - b.rank;
+    if (a.rank) return -1; if (b.rank) return 1;
+    return 0;
+  });
 
   const renderList = (items, emptyMsg) => {
     if (!items.length) return `<p class="empty">${emptyMsg}</p>`;
-    return '<div class="manga-saved-list">' + items.map(m => `
-      <div class="manga-saved-item">
-        <div class="manga-saved-emoji">📖</div>
-        <div class="manga-saved-info">
-          <div class="manga-saved-title">${escHtml(m.title)}</div>
-          <div class="manga-saved-meta">ตอนที่ ${m.chapter||0} · <span style="color:${statusColors[m.status]||'var(--text3)'}">${statusLabels[m.status]||m.status}</span></div>
-          ${m.note?`<div style="font-size:11px;color:var(--text3);margin-top:2px">${escHtml(m.note)}</div>`:''}
+    return '<div class="manga-saved-list">' + items.map((m,i) => `
+      <div class="manga-saved-item" style="align-items:flex-start;gap:8px">
+        <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:${m.rank?'var(--gold)':'var(--text3)'}">
+          ${m.rank?'#'+m.rank:'📖'}
         </div>
-        <div class="manga-saved-actions">
-          <button class="btn sm" onclick="updateMangaChapter(${m.id})" style="color:var(--gold);border-color:var(--gold-bg)">ตอน</button>
-          ${m.url?`<a class="btn sm" href="${escHtml(m.url)}" target="_blank" style="color:var(--blue);border-color:var(--blue-bg);text-decoration:none">อ่าน</a>`:''}
+        <div style="flex:1;min-width:0">
+          <div class="manga-saved-title">${escHtml(m.title)}</div>
+          <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center">
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:10px;color:var(--text3)">ตอน</span>
+              <input type="number" value="${m.chapter||0}" min="0" inputmode="numeric"
+                style="width:60px;padding:3px 7px;font-size:12px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'IBM Plex Mono',monospace"
+                onchange="updateMangaChapterInline(${m.id},this)" onclick="event.stopPropagation()">
+            </div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:10px;color:var(--text3)">อันดับ</span>
+              <input type="number" value="${m.rank||''}" min="1" placeholder="-" inputmode="numeric"
+                style="width:50px;padding:3px 7px;font-size:12px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--gold);font-family:'IBM Plex Mono',monospace"
+                onchange="updateMangaRankInline(${m.id},this)" onclick="event.stopPropagation()">
+            </div>
+            <select onchange="updateMangaStatusInline(${m.id},this)" onclick="event.stopPropagation()"
+              style="padding:3px 7px;font-size:12px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text);width:auto">
+              <option value="reading" ${m.status==='reading'?'selected':''}>กำลังอ่าน</option>
+              <option value="paused" ${m.status==='paused'?'selected':''}>พักไว้ก่อน</option>
+              <option value="finished" ${m.status==='finished'?'selected':''}>อ่านจบแล้ว</option>
+            </select>
+          </div>
+          ${m.note?`<div style="font-size:11px;color:var(--text3);margin-top:4px">${escHtml(m.note)}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+          ${m.url?`<a class="btn sm" href="${escHtml(m.url)}" target="_blank" style="color:var(--blue);border-color:var(--blue-bg);text-decoration:none;text-align:center">อ่าน</a>`:''}
           <button class="btn sm danger" onclick="deleteManga(${m.id})">ลบ</button>
         </div>
       </div>`).join('') + '</div>';
   };
 
-  document.getElementById('manga-reading-list').innerHTML = renderList(mangas.filter(m=>m.status==='reading'||m.status==='paused'), 'ยังไม่มีมังงะที่กำลังอ่านค่ะ');
-  document.getElementById('manga-finished-list').innerHTML = renderList(mangas.filter(m=>m.status==='finished'), 'ยังไม่มีมังงะที่อ่านจบค่ะ');
+  const reading = sortedMangas.filter(m=>m.status==='reading'||m.status==='paused');
+  const finished = sortedMangas.filter(m=>m.status==='finished');
+  document.getElementById('manga-reading-list').innerHTML = renderList(reading, 'ยังไม่มีมังงะที่กำลังอ่านค่ะ');
+  document.getElementById('manga-finished-list').innerHTML = renderList(finished, 'ยังไม่มีมังงะที่อ่านจบค่ะ');
 }
 
 /* ============================
@@ -1259,6 +1417,7 @@ document.getElementById('t-date').value = today;
 document.getElementById('r-date').value = today;
 document.getElementById('f-month').value = today.substring(0,7);
 
+myLinks = JSON.parse(localStorage.getItem('ball_mylinks')||'[]');
 renderHomeStats();
 </script>
 </body>
