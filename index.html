@@ -2,418 +2,775 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>บัญชีรายรับรายจ่าย</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>My App</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+Thai:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root {
-  --bg: #f5f3ef;
-  --surface: #ffffff;
-  --surface2: #f0ede8;
-  --border: #e2ddd7;
-  --text: #1a1714;
-  --text2: #6b6560;
-  --text3: #a09890;
-  --green: #2d6a4f;
-  --green-bg: #d8f3dc;
-  --red: #c1440e;
-  --red-bg: #fde8df;
-  --amber: #92600a;
-  --amber-bg: #fef3cd;
-  --blue: #1a4f8a;
-  --blue-bg: #dbeafe;
-  --purple: #6b3a7d;
-  --purple-bg: #f3e8ff;
-  --accent: #c1440e;
-  --radius: 12px;
-  --radius-sm: 8px;
+  --bg: #0e0d0b;
+  --bg2: #161410;
+  --surface: #1e1b17;
+  --surface2: #262320;
+  --surface3: #2e2a25;
+  --border: #3a3530;
+  --border2: #4a4540;
+  --text: #f0ebe3;
+  --text2: #9a9087;
+  --text3: #5a5550;
+  --gold: #c9a84c;
+  --gold2: #e8c96a;
+  --gold-bg: rgba(201,168,76,0.12);
+  --red: #e05c3a;
+  --red-bg: rgba(224,92,58,0.12);
+  --green: #4a9e6a;
+  --green-bg: rgba(74,158,106,0.12);
+  --blue: #4a7eb8;
+  --blue-bg: rgba(74,126,184,0.12);
+  --purple: #8a5ec8;
+  --purple-bg: rgba(138,94,200,0.12);
+  --amber: #c88a3a;
+  --amber-bg: rgba(200,138,58,0.12);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
 body {
   font-family: 'Sarabun', sans-serif;
   background: var(--bg);
   color: var(--text);
-  min-height: 100vh;
   font-size: 15px;
   line-height: 1.6;
 }
-.header {
-  background: var(--text);
-  color: #fff;
-  padding: 1rem 1.25rem;
+
+/* ===== PAGE SYSTEM ===== */
+.page { display: none; width: 100%; height: 100vh; overflow: hidden; flex-direction: column; }
+.page.active { display: flex; }
+
+/* ===== HOME ===== */
+#page-home {
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+.home-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(201,168,76,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 10% 80%, rgba(74,126,184,0.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+.home-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.3;
+  pointer-events: none;
+}
+.home-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0 1.25rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.home-header {
+  padding: 3rem 0 2rem;
+  text-align: center;
+}
+.home-logo {
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--gold);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  opacity: 0.8;
+}
+.home-title {
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.15;
+  margin-bottom: 0.5rem;
+}
+.home-title span { color: var(--gold); }
+.home-subtitle {
+  font-size: 13px;
+  color: var(--text3);
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.05em;
+}
+.home-date {
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 0.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* APP CARDS */
+.app-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding-bottom: 2rem;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+.app-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.app-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: var(--radius);
+}
+.app-card:hover::before, .app-card:active::before { opacity: 1; }
+.app-card.budget::before { background: var(--green-bg); }
+.app-card.todo::before { background: var(--gold-bg); }
+.app-card.manga::before { background: var(--purple-bg); }
+.app-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.app-card:active { transform: scale(0.97); }
+
+.app-card-icon {
+  font-size: 32px;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+.app-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  position: relative;
+  z-index: 1;
+  margin-bottom: 3px;
+}
+.app-card-desc {
+  font-size: 11px;
+  color: var(--text3);
+  position: relative;
+  z-index: 1;
+  line-height: 1.4;
+}
+.app-card-arrow {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 12px;
+  color: var(--text3);
+  z-index: 1;
+}
+.app-card.wide {
+  grid-column: 1 / -1;
+  min-height: 100px;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+.app-card.wide .app-card-icon { margin-bottom: 0; font-size: 28px; }
+.app-card.wide .app-card-content { flex: 1; }
+
+/* QUICK STATS */
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 8px;
+  max-width: 500px;
+  margin: 0 auto 1.25rem;
+  width: 100%;
+}
+.qs { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
+.qs-label { font-size: 9px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; margin-bottom: 3px; letter-spacing: 0.05em; }
+.qs-val { font-size: 15px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+
+/* ===== INNER APP HEADER ===== */
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0.875rem 1rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  gap: 10px;
+  flex-shrink: 0;
 }
-.header-title { font-size: 15px; font-weight: 600; }
-.header-sub { font-size: 10px; color: #a09890; font-family: 'IBM Plex Mono', monospace; margin-top: 1px; }
+.back-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 5px 12px;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.back-btn:hover { background: var(--surface3); color: var(--text); }
+.app-header-title { font-size: 15px; font-weight: 600; }
 .save-badge {
+  margin-left: auto;
   font-size: 10px;
   padding: 3px 9px;
   border-radius: 20px;
-  background: rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.5);
+  background: var(--surface2);
+  color: var(--text3);
   font-family: 'IBM Plex Mono', monospace;
-  min-width: 70px;
+  min-width: 60px;
   text-align: center;
   transition: all 0.3s;
 }
-.save-badge.saved { background: rgba(45,106,79,0.3); color: #86efac; }
-.nav {
+.save-badge.saved { background: var(--green-bg); color: var(--green); }
+
+/* ===== INNER NAV ===== */
+.inner-nav {
   display: flex;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  flex-shrink: 0;
 }
-.nav::-webkit-scrollbar { display: none; }
+.inner-nav::-webkit-scrollbar { display: none; }
 .nav-btn {
-  flex: 1;
-  min-width: 80px;
-  padding: 12px 10px;
+  flex: 1; min-width: 75px;
+  padding: 11px 8px;
   font-family: 'Sarabun', sans-serif;
-  font-size: 13px;
-  font-weight: 400;
+  font-size: 12px; font-weight: 400;
   color: var(--text2);
-  border: none;
-  background: none;
-  cursor: pointer;
+  border: none; background: none; cursor: pointer;
   border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-  white-space: nowrap;
+  transition: all 0.2s; white-space: nowrap;
 }
-.nav-btn.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+.nav-btn.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 600; }
 .nav-btn:hover { background: var(--surface2); }
-.main { max-width: 860px; margin: 0 auto; padding: 1.25rem 0.875rem 5rem; }
-.section { display: none; }
-.section.active { display: block; }
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-bottom: 1rem;
+
+/* ===== SCROLL CONTENT ===== */
+.scroll-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem 0.875rem 4rem;
 }
-@media(min-width:600px){ .metrics { grid-template-columns: repeat(4,1fr); } }
-.metric {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.875rem;
-}
-.metric-label { font-size: 10px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; margin-bottom: 4px; }
-.metric-value { font-size: 18px; font-weight: 600; line-height: 1.2; }
-.metric-value.g { color: var(--green); }
-.metric-value.r { color: var(--red); }
-.metric-value.b { color: var(--blue); }
-.metric-value.p { color: var(--purple); }
+.inner-section { display: none; }
+.inner-section.active { display: block; }
+
+/* ===== CARDS / FORMS ===== */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 1.125rem;
-  margin-bottom: 1rem;
+  padding: 1rem 1.125rem;
+  margin-bottom: 0.875rem;
 }
 .card-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text2);
+  font-size: 10px; font-weight: 600;
+  color: var(--text3);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 1rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.875rem;
   font-family: 'IBM Plex Mono', monospace;
 }
 .form-grid { display: grid; gap: 7px; margin-bottom: 7px; }
 .form-2 { grid-template-columns: 1fr 1fr; }
 .form-3 { grid-template-columns: 1fr 1fr 1fr; }
-@media(max-width:480px) { .form-2, .form-3 { grid-template-columns: 1fr; } }
+@media(max-width:480px) { .form-2,.form-3 { grid-template-columns: 1fr; } }
 input, select, textarea {
-  width: 100%;
-  padding: 8px 11px;
-  font-family: 'Sarabun', sans-serif;
-  font-size: 14px;
+  width: 100%; padding: 8px 11px;
+  font-family: 'Sarabun', sans-serif; font-size: 14px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
-  transition: border-color 0.2s;
-  -webkit-appearance: none;
+  border-radius: var(--radius-xs);
+  background: var(--surface2); color: var(--text);
+  transition: border-color 0.2s; -webkit-appearance: none;
 }
-input:focus, select:focus { outline: none; border-color: var(--text); }
+input:focus, select:focus { outline: none; border-color: var(--gold); }
+select option { background: var(--surface2); }
 .btn {
-  padding: 8px 16px;
-  font-family: 'Sarabun', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
+  padding: 8px 15px;
+  font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 500;
+  border-radius: var(--radius-xs); cursor: pointer;
   border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
+  background: var(--surface2); color: var(--text);
   transition: all 0.15s;
-  -webkit-tap-highlight-color: transparent;
 }
-.btn:hover { background: var(--surface2); }
-.btn.primary { background: var(--text); color: #fff; border-color: var(--text); }
-.btn.primary:hover { background: #333; }
-.btn.danger { color: var(--red); border-color: var(--red-bg); }
+.btn:hover { background: var(--surface3); }
+.btn.primary { background: var(--gold); color: #0e0d0b; border-color: var(--gold); font-weight: 600; }
+.btn.primary:hover { background: var(--gold2); }
+.btn.danger { color: var(--red); border-color: transparent; }
 .btn.danger:hover { background: var(--red-bg); }
 .btn.sm { padding: 4px 9px; font-size: 11px; }
 .btn-row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+
+/* METRICS */
+.metrics { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 0.875rem; }
+@media(min-width:550px){ .metrics { grid-template-columns: repeat(4,1fr); } }
+.metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.875rem; }
+.metric-label { font-size: 10px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; margin-bottom: 4px; }
+.metric-value { font-size: 17px; font-weight: 600; }
+.metric-value.g { color: var(--green); } .metric-value.r { color: var(--red); }
+.metric-value.b { color: var(--blue); } .metric-value.p { color: var(--purple); }
+
+/* TABLE */
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 460px; }
-th {
-  text-align: left;
-  padding: 7px 9px;
-  color: var(--text3);
-  font-weight: 500;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-td { padding: 9px 9px; border-bottom: 1px solid var(--border); color: var(--text); }
+table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 430px; }
+th { text-align: left; padding: 6px 8px; color: var(--text3); font-weight: 500; font-family: 'IBM Plex Mono', monospace; font-size: 9px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 8px 8px; border-bottom: 1px solid var(--border); color: var(--text); }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--surface2); }
-.badge {
-  display: inline-block;
-  padding: 2px 7px;
-  border-radius: 20px;
-  font-size: 10px;
-  font-weight: 500;
-  font-family: 'IBM Plex Mono', monospace;
-}
+
+/* BADGE */
+.badge { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 500; font-family: 'IBM Plex Mono', monospace; }
 .badge.income { background: var(--green-bg); color: var(--green); }
 .badge.expense { background: var(--red-bg); color: var(--red); }
 .badge.pending { background: var(--amber-bg); color: var(--amber); }
 .badge.paid { background: var(--green-bg); color: var(--green); }
 .badge.debt { background: var(--purple-bg); color: var(--purple); }
-.person-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 9px;
-  margin-bottom: 1rem;
-}
-.person-card {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 11px;
-  cursor: pointer;
-  transition: all 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.person-card:hover { border-color: var(--text3); background: var(--surface); }
-.person-name { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
-.person-pending { font-size: 17px; font-weight: 600; color: var(--red); font-family: 'IBM Plex Mono', monospace; }
-.person-info { font-size: 10px; color: var(--text3); margin-top: 2px; }
-.person-tap { font-size: 10px; color: var(--text3); margin-top: 5px; }
-.chart-wrap { position: relative; width: 100%; height: 200px; }
-.filter-row { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 0.875rem; }
-.filter-row select, .filter-row input { width: auto; flex: 1; min-width: 110px; }
-.empty { text-align: center; padding: 2rem; color: var(--text3); font-size: 13px; }
+
+/* AMOUNT */
 .amount-pos { font-weight: 600; color: var(--green); font-family: 'IBM Plex Mono', monospace; }
 .amount-neg { font-weight: 600; color: var(--red); font-family: 'IBM Plex Mono', monospace; }
 .amount-neutral { font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+
+/* CHART */
+.chart-wrap { position: relative; width: 100%; height: 190px; }
 .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 11px; color: var(--text2); }
 .legend-item { display: flex; align-items: center; gap: 4px; }
-.legend-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; }
 
-/* MODAL */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 200;
-  padding: 1rem;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
-.modal {
-  background: var(--surface);
-  border-radius: var(--radius);
-  width: 100%;
-  max-width: 600px;
-  padding: 1.25rem;
-  margin: auto;
-  position: relative;
-}
-.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-.modal-title { font-size: 15px; font-weight: 600; }
-.modal-close {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 4px 10px;
-  font-size: 13px;
-  cursor: pointer;
-  font-family: 'Sarabun', sans-serif;
-}
+/* PERSON CARDS */
+.person-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 0.875rem; }
+.person-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; cursor: pointer; transition: all 0.15s; }
+.person-card:hover { border-color: var(--gold); }
+.person-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.person-pending { font-size: 16px; font-weight: 600; color: var(--red); font-family: 'IBM Plex Mono', monospace; }
+.person-info { font-size: 10px; color: var(--text3); margin-top: 2px; }
 
-/* DATALIST COMBO */
-.combo-wrap { position: relative; }
-
-/* BAR PERCENT */
+/* PCT BARS */
 .pct-bar-wrap { margin-bottom: 10px; }
 .pct-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-bottom: 4px; }
-.pct-bar-track { background: var(--surface2); border-radius: 4px; height: 10px; overflow: hidden; }
+.pct-bar-track { background: var(--surface2); border-radius: 4px; height: 9px; overflow: hidden; }
 .pct-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
 
+/* FILTER */
+.filter-row { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 0.875rem; }
+.filter-row select, .filter-row input { width: auto; flex: 1; min-width: 100px; }
+
+/* EMPTY */
+.empty { text-align: center; padding: 1.75rem; color: var(--text3); font-size: 13px; }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; padding: 1rem; overflow-y: auto; }
+.modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 580px; padding: 1.25rem; margin: auto; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.modal-title { font-size: 15px; font-weight: 600; }
+
+/* ===== TODO ===== */
+.todo-add-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+.todo-add-row input { flex: 1; }
+.todo-list { display: flex; flex-direction: column; gap: 6px; }
+.todo-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+  transition: all 0.2s; cursor: pointer;
+}
+.todo-item:hover { border-color: var(--border2); }
+.todo-item.done { opacity: 0.5; }
+.todo-check {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--border2); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; background: transparent;
+}
+.todo-item.done .todo-check { background: var(--gold); border-color: var(--gold); }
+.todo-check-inner { width: 6px; height: 6px; border-radius: 50%; background: var(--bg); display: none; }
+.todo-item.done .todo-check-inner { display: block; }
+.todo-text { flex: 1; font-size: 14px; }
+.todo-item.done .todo-text { text-decoration: line-through; color: var(--text3); }
+.todo-cat-badge {
+  font-size: 10px; padding: 2px 7px; border-radius: 20px;
+  font-family: 'IBM Plex Mono', monospace; font-weight: 500;
+}
+.todo-cat-select { margin-bottom: 1rem; display: flex; gap: 7px; flex-wrap: wrap; }
+.cat-filter-btn {
+  padding: 4px 12px; border-radius: 20px; font-size: 12px;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text2); cursor: pointer; font-family: 'Sarabun', sans-serif;
+  transition: all 0.15s;
+}
+.cat-filter-btn.active { background: var(--gold); border-color: var(--gold); color: #0e0d0b; font-weight: 600; }
+
+/* ===== MANGA ===== */
+.manga-search-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+.manga-search-row input { flex: 1; }
+.manga-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+.manga-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); overflow: hidden; cursor: pointer;
+  transition: all 0.2s;
+}
+.manga-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+.manga-cover {
+  width: 100%; aspect-ratio: 2/3; object-fit: cover;
+  background: var(--surface3); display: flex; align-items: center; justify-content: center;
+  font-size: 32px; color: var(--text3);
+}
+.manga-cover img { width: 100%; height: 100%; object-fit: cover; }
+.manga-info { padding: 8px 9px; }
+.manga-title { font-size: 12px; font-weight: 600; line-height: 1.3; margin-bottom: 3px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.manga-sub { font-size: 10px; color: var(--text3); }
+.manga-status { font-size: 10px; padding: 2px 6px; border-radius: 20px; font-family: 'IBM Plex Mono', monospace; display: inline-block; margin-top: 4px; }
+.manga-status.ongoing { background: var(--green-bg); color: var(--green); }
+.manga-status.completed { background: var(--blue-bg); color: var(--blue); }
+.manga-links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 1rem; }
+.manga-link-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 14px 10px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.15s; text-decoration: none;
+  color: var(--text);
+}
+.manga-link-btn:hover { border-color: var(--gold); background: var(--surface3); }
+.manga-link-icon { font-size: 24px; }
+.manga-link-name { font-size: 13px; font-weight: 600; }
+.manga-link-desc { font-size: 10px; color: var(--text3); text-align: center; }
+.manga-saved-list { display: flex; flex-direction: column; gap: 8px; }
+.manga-saved-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+}
+.manga-saved-emoji { font-size: 24px; flex-shrink: 0; }
+.manga-saved-info { flex: 1; }
+.manga-saved-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.manga-saved-meta { font-size: 11px; color: var(--text3); }
+.manga-saved-actions { display: flex; gap: 6px; }
+
 /* DEBT */
-.debt-summary { display: flex; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap; }
-.debt-stat { flex: 1; min-width: 120px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
-.debt-stat-label { font-size: 10px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; margin-bottom: 3px; }
-.debt-stat-val { font-size: 17px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+.debt-summary-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 0.875rem; }
+@media(min-width:400px){ .debt-summary-grid { grid-template-columns: repeat(4,1fr); } }
+.debt-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 11px; }
+.debt-stat-label { font-size: 9px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; margin-bottom: 3px; }
+.debt-stat-val { font-size: 16px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div>
-    <div class="header-title">บัญชีรายรับรายจ่าย</div>
-    <div class="header-sub">BUDGET TRACKER</div>
+<!-- ===== HOME PAGE ===== -->
+<div id="page-home" class="page active">
+  <div class="home-bg"></div>
+  <div class="home-grid-bg"></div>
+  <div class="home-content">
+    <div class="home-header">
+      <div class="home-logo">MY SPACE</div>
+      <div class="home-title">สวัสดี<span> 👋</span></div>
+      <div class="home-subtitle">personal dashboard</div>
+      <div class="home-date" id="home-date"></div>
+    </div>
+
+    <div class="quick-stats" id="home-stats">
+      <div class="qs"><div class="qs-label">คงเหลือ</div><div class="qs-val" id="qs-balance" style="color:var(--green)">฿0</div></div>
+      <div class="qs"><div class="qs-label">TODO วันนี้</div><div class="qs-val" id="qs-todo">0</div></div>
+      <div class="qs"><div class="qs-label">มังงะ</div><div class="qs-val" id="qs-manga">0</div></div>
+    </div>
+
+    <div class="app-grid">
+      <div class="app-card budget" onclick="goTo('budget')">
+        <div class="app-card-arrow">→</div>
+        <div class="app-card-icon">💰</div>
+        <div>
+          <div class="app-card-name">บัญชี</div>
+          <div class="app-card-desc">รายรับ รายจ่าย สำรองจ่าย หนี้สิน</div>
+        </div>
+      </div>
+      <div class="app-card todo" onclick="goTo('todo')">
+        <div class="app-card-arrow">→</div>
+        <div class="app-card-icon">✅</div>
+        <div>
+          <div class="app-card-name">To-Do</div>
+          <div class="app-card-desc">รายการสิ่งที่ต้องทำ จัดหมวดหมู่ได้</div>
+        </div>
+      </div>
+      <div class="app-card manga wide" onclick="goTo('manga')">
+        <div class="app-card-arrow">→</div>
+        <div class="app-card-icon">📚</div>
+        <div class="app-card-content">
+          <div class="app-card-name">Web Manga</div>
+          <div class="app-card-desc">ลิงก์เว็บอ่านมังงะ บันทึกรายการที่กำลังอ่าน</div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="save-badge" id="save-status">พร้อม</div>
 </div>
 
-<nav class="nav">
-  <button class="nav-btn active" onclick="switchTab('dashboard')">ภาพรวม</button>
-  <button class="nav-btn" onclick="switchTab('transactions')">รายรับ-รายจ่าย</button>
-  <button class="nav-btn" onclick="switchTab('reimbursement')">สำรองจ่าย</button>
-  <button class="nav-btn" onclick="switchTab('debt')">หนี้สิน</button>
-</nav>
-
-<div class="main">
-
-  <!-- DASHBOARD -->
-  <div id="tab-dashboard" class="section active">
-    <div class="metrics" id="metrics"></div>
-    <div class="card">
-      <div class="card-title">รายรับ vs รายจ่าย — 6 เดือนล่าสุด</div>
-      <div class="chart-wrap">
-        <canvas id="barChart"></canvas>
-      </div>
-      <div class="legend" id="barLegend"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">สัดส่วนรายจ่ายตามหมวดหมู่ (%)</div>
-      <div id="pct-bars"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">กราฟวงกลมรายจ่าย</div>
-      <div style="position:relative;width:100%;max-width:260px;height:180px;margin:0 auto">
-        <canvas id="pieChart"></canvas>
-      </div>
-      <div class="legend" id="pieLegend" style="justify-content:center;margin-top:10px"></div>
-    </div>
+<!-- ===== BUDGET PAGE ===== -->
+<div id="page-budget" class="page">
+  <div class="app-header">
+    <button class="back-btn" onclick="goHome()">← กลับ</button>
+    <div class="app-header-title">💰 บัญชี</div>
+    <div class="save-badge" id="budget-save-status"></div>
   </div>
-
-  <!-- TRANSACTIONS -->
-  <div id="tab-transactions" class="section">
-    <div class="card">
-      <div class="card-title">เพิ่มรายการใหม่</div>
-      <div class="form-grid form-2">
-        <select id="t-type">
-          <option value="income">รายรับ</option>
-          <option value="expense">รายจ่าย</option>
-        </select>
-        <input type="text" id="t-cat" placeholder="หมวดหมู่ เช่น อาหาร, เงินเดือน" list="cat-list">
-        <datalist id="cat-list"></datalist>
+  <nav class="inner-nav">
+    <button class="nav-btn active" onclick="switchBudgetTab('dashboard')">ภาพรวม</button>
+    <button class="nav-btn" onclick="switchBudgetTab('transactions')">รายรับ-จ่าย</button>
+    <button class="nav-btn" onclick="switchBudgetTab('reimbursement')">สำรองจ่าย</button>
+    <button class="nav-btn" onclick="switchBudgetTab('debt')">หนี้สิน</button>
+  </nav>
+  <div class="scroll-content" id="budget-scroll">
+    <div id="btab-dashboard" class="inner-section active">
+      <div class="metrics" id="b-metrics"></div>
+      <div class="card">
+        <div class="card-title">รายรับ vs รายจ่าย — 6 เดือนล่าสุด</div>
+        <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+        <div class="legend" id="barLegend"></div>
       </div>
-      <div class="form-grid form-3">
-        <input type="text" id="t-desc" placeholder="รายละเอียด">
-        <input type="number" id="t-amount" placeholder="จำนวนเงิน (฿)" min="0" inputmode="decimal">
-        <input type="date" id="t-date">
+      <div class="card">
+        <div class="card-title">สัดส่วนรายจ่าย (%)</div>
+        <div id="pct-bars"></div>
       </div>
-      <div class="btn-row">
-        <button class="btn primary" onclick="addTransaction()">+ เพิ่มรายการ</button>
+      <div class="card">
+        <div class="card-title">กราฟวงกลมรายจ่าย</div>
+        <div style="position:relative;width:100%;max-width:240px;height:170px;margin:0 auto">
+          <canvas id="pieChart"></canvas>
+        </div>
+        <div class="legend" id="pieLegend" style="justify-content:center;margin-top:10px"></div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-title">รายการทั้งหมด</div>
-      <div class="filter-row">
-        <select id="f-type" onchange="renderTransactions()">
-          <option value="">ทุกประเภท</option>
-          <option value="income">รายรับ</option>
-          <option value="expense">รายจ่าย</option>
-        </select>
-        <input type="month" id="f-month" onchange="renderTransactions()">
+    <div id="btab-transactions" class="inner-section">
+      <div class="card">
+        <div class="card-title">เพิ่มรายการ</div>
+        <div class="form-grid form-2">
+          <select id="t-type"><option value="income">รายรับ</option><option value="expense">รายจ่าย</option></select>
+          <input type="text" id="t-cat" placeholder="หมวดหมู่" list="cat-list" autocomplete="off">
+          <datalist id="cat-list"></datalist>
+        </div>
+        <div class="form-grid form-3">
+          <input type="text" id="t-desc" placeholder="รายละเอียด">
+          <input type="number" id="t-amount" placeholder="จำนวนเงิน (฿)" min="0" inputmode="decimal">
+          <input type="date" id="t-date">
+        </div>
+        <div class="btn-row"><button class="btn primary" onclick="addTransaction()">+ เพิ่ม</button></div>
       </div>
-      <div class="table-wrap" id="t-table"></div>
+      <div class="card">
+        <div class="card-title">รายการทั้งหมด</div>
+        <div class="filter-row">
+          <select id="f-type" onchange="renderTransactions()">
+            <option value="">ทุกประเภท</option>
+            <option value="income">รายรับ</option>
+            <option value="expense">รายจ่าย</option>
+          </select>
+          <input type="month" id="f-month" onchange="renderTransactions()">
+        </div>
+        <div class="table-wrap" id="t-table"></div>
+      </div>
     </div>
-  </div>
-
-  <!-- REIMBURSEMENT -->
-  <div id="tab-reimbursement" class="section">
-    <div class="card">
-      <div class="card-title">เพิ่มรายการสำรองจ่าย</div>
-      <div class="form-grid form-2">
-        <div class="combo-wrap">
+    <div id="btab-reimbursement" class="inner-section">
+      <div class="card">
+        <div class="card-title">เพิ่มรายการสำรองจ่าย</div>
+        <div class="form-grid form-2">
           <input type="text" id="r-person" placeholder="ชื่อผู้รับเงิน" list="person-list" autocomplete="off">
           <datalist id="person-list"></datalist>
+          <input type="text" id="r-desc" placeholder="รายละเอียด">
         </div>
-        <input type="text" id="r-desc" placeholder="รายละเอียด / รายการ">
+        <div class="form-grid form-3">
+          <input type="number" id="r-amount" placeholder="จำนวนเงิน (฿)" min="0" inputmode="decimal">
+          <input type="date" id="r-date">
+          <input type="text" id="r-note" placeholder="หมายเหตุ">
+        </div>
+        <div class="btn-row"><button class="btn primary" onclick="addReimbursement()">+ เพิ่ม</button></div>
       </div>
-      <div class="form-grid form-3">
-        <input type="number" id="r-amount" placeholder="จำนวนเงิน (฿)" min="0" inputmode="decimal">
-        <input type="date" id="r-date">
-        <input type="text" id="r-note" placeholder="หมายเหตุ (ถ้ามี)">
+      <div class="card">
+        <div class="card-title">ยอดรวมแต่ละคน — กดเพื่อดูรายละเอียด</div>
+        <div id="person-summary"></div>
       </div>
-      <div class="btn-row">
-        <button class="btn primary" onclick="addReimbursement()">+ เพิ่มรายการ</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">ยอดรวมแต่ละคน — กดเพื่อดูรายละเอียด</div>
-      <div id="person-summary"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">รายการสำรองจ่ายทั้งหมด</div>
-      <div class="table-wrap" id="r-table"></div>
-    </div>
-  </div>
-
-  <!-- DEBT -->
-  <div id="tab-debt" class="section">
-    <div class="card">
-      <div class="card-title">เพิ่มรายการหนี้สิน</div>
-      <div class="form-grid form-2">
-        <input type="text" id="d-name" placeholder="ชื่อเจ้าหนี้ / รายการ">
-        <input type="text" id="d-desc" placeholder="รายละเอียด">
-      </div>
-      <div class="form-grid form-3">
-        <input type="number" id="d-amount" placeholder="ยอดหนี้ทั้งหมด (฿)" min="0" inputmode="decimal">
-        <input type="date" id="d-due" placeholder="วันครบกำหนด">
-        <input type="text" id="d-note" placeholder="หมายเหตุ">
-      </div>
-      <div class="btn-row">
-        <button class="btn primary" onclick="addDebt()">+ เพิ่มหนี้สิน</button>
+      <div class="card">
+        <div class="card-title">รายการทั้งหมด</div>
+        <div class="table-wrap" id="r-table"></div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-title">สรุปหนี้สิน</div>
-      <div id="debt-summary-stats"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">รายการหนี้สินทั้งหมด</div>
-      <div class="table-wrap" id="d-table"></div>
+    <div id="btab-debt" class="inner-section">
+      <div class="card">
+        <div class="card-title">เพิ่มรายการหนี้สิน</div>
+        <div class="form-grid form-2">
+          <input type="text" id="d-name" placeholder="ชื่อเจ้าหนี้ / รายการ">
+          <input type="text" id="d-desc" placeholder="รายละเอียด">
+        </div>
+        <div class="form-grid form-3">
+          <input type="number" id="d-amount" placeholder="ยอดหนี้ (฿)" min="0" inputmode="decimal">
+          <input type="date" id="d-due">
+          <input type="text" id="d-note" placeholder="หมายเหตุ">
+        </div>
+        <div class="btn-row"><button class="btn primary" onclick="addDebt()">+ เพิ่ม</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">สรุปหนี้สิน</div>
+        <div id="debt-summary-stats"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">รายการหนี้ทั้งหมด</div>
+        <div class="table-wrap" id="d-table"></div>
+      </div>
     </div>
   </div>
+</div>
 
+<!-- ===== TODO PAGE ===== -->
+<div id="page-todo" class="page">
+  <div class="app-header">
+    <button class="back-btn" onclick="goHome()">← กลับ</button>
+    <div class="app-header-title">✅ To-Do List</div>
+    <div style="margin-left:auto;font-size:12px;color:var(--text3);font-family:'IBM Plex Mono',monospace" id="todo-count"></div>
+  </div>
+  <div class="scroll-content">
+    <div class="card">
+      <div class="todo-add-row">
+        <input type="text" id="todo-input" placeholder="สิ่งที่ต้องทำ..." onkeydown="if(event.key==='Enter')addTodo()">
+        <select id="todo-cat-input" style="width:auto;min-width:90px">
+          <option value="ทั่วไป">ทั่วไป</option>
+          <option value="งาน">งาน</option>
+          <option value="ส่วนตัว">ส่วนตัว</option>
+          <option value="ซื้อของ">ซื้อของ</option>
+          <option value="สุขภาพ">สุขภาพ</option>
+          <option value="อื่นๆ">อื่นๆ</option>
+        </select>
+        <button class="btn primary" onclick="addTodo()">+</button>
+      </div>
+      <div class="todo-cat-select" id="todo-filter-btns"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">รายการที่ต้องทำ</div>
+      <div id="todo-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">เสร็จแล้ว</div>
+      <div id="todo-done-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MANGA PAGE ===== -->
+<div id="page-manga" class="page">
+  <div class="app-header">
+    <button class="back-btn" onclick="goHome()">← กลับ</button>
+    <div class="app-header-title">📚 Web Manga</div>
+  </div>
+  <nav class="inner-nav">
+    <button class="nav-btn active" onclick="switchMangaTab('sites')">เว็บอ่านมังงะ</button>
+    <button class="nav-btn" onclick="switchMangaTab('reading')">กำลังอ่าน</button>
+    <button class="nav-btn" onclick="switchMangaTab('add')">+ เพิ่มรายการ</button>
+  </nav>
+  <div class="scroll-content">
+    <div id="mtab-sites" class="inner-section active">
+      <div class="card">
+        <div class="card-title">เว็บอ่านมังงะฟรี</div>
+        <div class="manga-links">
+          <a class="manga-link-btn" href="https://mangadex.org" target="_blank">
+            <div class="manga-link-icon">🌐</div>
+            <div class="manga-link-name">MangaDex</div>
+            <div class="manga-link-desc">ฟรี ภาษาไทยมีเยอะ ไม่มีโฆษณา</div>
+          </a>
+          <a class="manga-link-btn" href="https://mangakakalot.com" target="_blank">
+            <div class="manga-link-icon">📖</div>
+            <div class="manga-link-name">MangaKakalot</div>
+            <div class="manga-link-desc">อัปเดตเร็ว มีเยอะมาก</div>
+          </a>
+          <a class="manga-link-btn" href="https://webtoons.com" target="_blank">
+            <div class="manga-link-icon">🎨</div>
+            <div class="manga-link-name">Webtoon</div>
+            <div class="manga-link-desc">เว็บตูน อ่านง่าย มีภาษาไทย</div>
+          </a>
+          <a class="manga-link-btn" href="https://mangaplus.shueisha.co.jp" target="_blank">
+            <div class="manga-link-icon">⭐</div>
+            <div class="manga-link-name">MANGA Plus</div>
+            <div class="manga-link-desc">ของ Shueisha ตอนล่าสุดฟรี</div>
+          </a>
+          <a class="manga-link-btn" href="https://comic.sanook.com" target="_blank">
+            <div class="manga-link-icon">🇹🇭</div>
+            <div class="manga-link-name">Sanook Comic</div>
+            <div class="manga-link-desc">ไทย มังงะ + การ์ตูนไทย</div>
+          </a>
+          <a class="manga-link-btn" href="https://readmanganato.com" target="_blank">
+            <div class="manga-link-icon">📚</div>
+            <div class="manga-link-name">ReadManganato</div>
+            <div class="manga-link-desc">เยอะมาก อัปเดตสม่ำเสมอ</div>
+          </a>
+          <a class="manga-link-btn" href="https://anilist.co" target="_blank">
+            <div class="manga-link-icon">📊</div>
+            <div class="manga-link-name">AniList</div>
+            <div class="manga-link-desc">ติดตาม+รีวิว anime & manga</div>
+          </a>
+          <a class="manga-link-btn" href="https://myanimelist.net" target="_blank">
+            <div class="manga-link-icon">🗂️</div>
+            <div class="manga-link-name">MyAnimeList</div>
+            <div class="manga-link-desc">ฐานข้อมูลมังงะใหญ่ที่สุด</div>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div id="mtab-reading" class="inner-section">
+      <div class="card">
+        <div class="card-title">มังงะที่กำลังอ่าน</div>
+        <div id="manga-reading-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">อ่านจบแล้ว</div>
+        <div id="manga-finished-list"></div>
+      </div>
+    </div>
+    <div id="mtab-add" class="inner-section">
+      <div class="card">
+        <div class="card-title">เพิ่มมังงะที่กำลังอ่าน</div>
+        <div class="form-grid">
+          <input type="text" id="m-title" placeholder="ชื่อมังงะ">
+          <input type="text" id="m-url" placeholder="ลิงก์ (ถ้ามี)">
+        </div>
+        <div class="form-grid form-2">
+          <input type="number" id="m-chapter" placeholder="อ่านถึงตอนที่" min="0" inputmode="numeric">
+          <select id="m-status">
+            <option value="reading">กำลังอ่าน</option>
+            <option value="finished">อ่านจบแล้ว</option>
+            <option value="paused">พักไว้ก่อน</option>
+          </select>
+        </div>
+        <input type="text" id="m-note" placeholder="หมายเหตุ / ความรู้สึก" style="margin-top:7px">
+        <div class="btn-row"><button class="btn primary" onclick="addManga()">+ เพิ่มรายการ</button></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- PERSON MODAL -->
 <div class="modal-overlay" id="person-modal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="modal-person-name">ชื่อ</div>
-      <button class="modal-close" onclick="closeModal()">ปิด ×</button>
+      <div class="modal-title" id="modal-person-name"></div>
+      <button class="btn sm" onclick="closePersonModal()">ปิด ×</button>
     </div>
     <div id="modal-person-stats" style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap"></div>
     <div class="table-wrap" id="modal-person-table"></div>
@@ -421,407 +778,488 @@ tr:hover td { background: var(--surface2); }
 </div>
 
 <script>
-/* ======== DATA ======== */
+/* ============================
+   DATA
+   ============================ */
 let transactions = JSON.parse(localStorage.getItem('ball_tx') || '[]');
 let reimbursements = JSON.parse(localStorage.getItem('ball_re') || '[]');
 let debts = JSON.parse(localStorage.getItem('ball_debt') || '[]');
+let todos = JSON.parse(localStorage.getItem('ball_todo') || '[]');
+let mangas = JSON.parse(localStorage.getItem('ball_manga') || '[]');
 let barChartInst = null, pieChartInst = null;
 let saveTimer = null;
 
-function saveData() {
-  try {
-    localStorage.setItem('ball_tx', JSON.stringify(transactions));
-    localStorage.setItem('ball_re', JSON.stringify(reimbursements));
-    localStorage.setItem('ball_debt', JSON.stringify(debts));
-    showStatus('บันทึกแล้ว', 'saved');
-  } catch(e) {
-    showStatus('ข้อผิดพลาด', 'error');
-  }
+function saveAll() {
+  localStorage.setItem('ball_tx', JSON.stringify(transactions));
+  localStorage.setItem('ball_re', JSON.stringify(reimbursements));
+  localStorage.setItem('ball_debt', JSON.stringify(debts));
+  localStorage.setItem('ball_todo', JSON.stringify(todos));
+  localStorage.setItem('ball_manga', JSON.stringify(mangas));
 }
-function showStatus(msg, cls) {
-  const el = document.getElementById('save-status');
-  el.textContent = msg;
-  el.className = 'save-badge ' + (cls || '');
+function saveBudget() {
+  localStorage.setItem('ball_tx', JSON.stringify(transactions));
+  localStorage.setItem('ball_re', JSON.stringify(reimbursements));
+  localStorage.setItem('ball_debt', JSON.stringify(debts));
+  const el = document.getElementById('budget-save-status');
+  el.textContent = 'บันทึกแล้ว'; el.className = 'save-badge saved';
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => { el.textContent = ''; el.className = 'save-badge'; }, 2000);
 }
 
-/* ======== FORMAT ======== */
 function fmt(n) {
+  const num = Number(n);
+  if (isNaN(num)) return '0';
+  if (num >= 1000000) return (num/1000000).toFixed(1) + 'M';
+  if (num >= 10000) return (num/1000).toFixed(1) + 'K';
+  return num.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+function fmtFull(n) {
   const num = Number(n);
   if (isNaN(num)) return '0';
   return num.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 function fmtDate(d) {
-  if (!d) return '';
-  const p = d.split('-');
+  if (!d) return ''; const p = d.split('-');
   if (p.length < 3) return d;
-  return p[2] + '/' + p[1] + '/' + p[0];
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) { return String(s).replace(/'/g,"\\'"); }
+
+/* ============================
+   NAVIGATION
+   ============================ */
+function goTo(app) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + app).classList.add('active');
+  if (app === 'budget') { updateCatList(); updatePersonList(); renderBudgetDashboard(); renderTransactions(); }
+  if (app === 'todo') renderTodo();
+  if (app === 'manga') renderManga();
+}
+function goHome() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-home').classList.add('active');
+  renderHomeStats();
 }
 
-/* ======== TAB ======== */
-function switchTab(t) {
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelector(`[onclick="switchTab('${t}')"]`).classList.add('active');
-  document.getElementById('tab-' + t).classList.add('active');
-  if (t === 'dashboard') renderDashboard();
-  if (t === 'transactions') { updateCatList(); renderTransactions(); }
-  if (t === 'reimbursement') { updatePersonList(); renderReimbursement(); }
-  if (t === 'debt') renderDebt();
+/* ============================
+   HOME
+   ============================ */
+function renderHomeStats() {
+  const totalIncome = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const totalExpense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const balance = totalIncome - totalExpense;
+  const pendingTodos = todos.filter(t=>!t.done).length;
+  const mangaCount = mangas.length;
+  const el = document.getElementById('qs-balance');
+  el.textContent = '฿'+fmt(balance);
+  el.style.color = balance >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('qs-todo').textContent = pendingTodos;
+  document.getElementById('qs-manga').textContent = mangaCount;
 }
 
-/* ======== DATALIST ======== */
-function updatePersonList() {
-  const names = [...new Set(reimbursements.map(r => r.person).filter(Boolean))];
-  document.getElementById('person-list').innerHTML = names.map(n => `<option value="${n}">`).join('');
+/* ============================
+   BUDGET TABS
+   ============================ */
+function switchBudgetTab(t) {
+  document.querySelectorAll('#page-budget .nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#page-budget .inner-section').forEach(s => s.classList.remove('active'));
+  document.querySelector(`#page-budget .nav-btn[onclick="switchBudgetTab('${t}')"]`).classList.add('active');
+  document.getElementById('btab-' + t).classList.add('active');
+  document.getElementById('budget-scroll').scrollTop = 0;
+  if (t==='dashboard') renderBudgetDashboard();
+  if (t==='transactions') { updateCatList(); renderTransactions(); }
+  if (t==='reimbursement') { updatePersonList(); renderReimbursement(); }
+  if (t==='debt') renderDebt();
 }
+
 function updateCatList() {
-  const cats = [...new Set(transactions.map(t => t.cat).filter(Boolean))];
-  document.getElementById('cat-list').innerHTML = cats.map(c => `<option value="${c}">`).join('');
+  const cats = [...new Set(transactions.map(t=>t.cat).filter(Boolean))];
+  document.getElementById('cat-list').innerHTML = cats.map(c=>`<option value="${escHtml(c)}">`).join('');
+}
+function updatePersonList() {
+  const names = [...new Set(reimbursements.map(r=>r.person).filter(Boolean))];
+  document.getElementById('person-list').innerHTML = names.map(n=>`<option value="${escHtml(n)}">`).join('');
 }
 
-/* ======== TRANSACTIONS ======== */
+/* TRANSACTIONS */
 function addTransaction() {
   const type = document.getElementById('t-type').value;
   const cat = document.getElementById('t-cat').value.trim();
   const desc = document.getElementById('t-desc').value.trim();
   const amount = parseFloat(document.getElementById('t-amount').value);
   const date = document.getElementById('t-date').value;
-  if (!desc || !amount || isNaN(amount) || amount <= 0 || !date) {
-    alert('กรุณากรอกข้อมูลให้ครบ (รายละเอียด, จำนวนเงิน, วันที่)');
-    return;
-  }
-  transactions.unshift({ id: Date.now(), type, cat: cat || 'ทั่วไป', desc, amount, date });
-  saveData();
-  document.getElementById('t-cat').value = '';
-  document.getElementById('t-desc').value = '';
-  document.getElementById('t-amount').value = '';
-  updateCatList();
-  renderTransactions();
-  renderDashboard();
+  if (!desc || !amount || isNaN(amount) || amount <= 0 || !date) { alert('กรุณากรอกรายละเอียด จำนวนเงิน และวันที่ค่ะ'); return; }
+  transactions.unshift({ id: Date.now(), type, cat: cat||'ทั่วไป', desc, amount, date });
+  saveBudget();
+  ['t-cat','t-desc','t-amount'].forEach(id => document.getElementById(id).value='');
+  updateCatList(); renderTransactions(); renderBudgetDashboard();
 }
 function deleteTransaction(id) {
   if (!confirm('ลบรายการนี้?')) return;
-  transactions = transactions.filter(t => t.id !== id);
-  saveData(); renderTransactions(); renderDashboard();
+  transactions = transactions.filter(t=>t.id!==id);
+  saveBudget(); renderTransactions(); renderBudgetDashboard();
 }
 function renderTransactions() {
   const fType = document.getElementById('f-type').value;
   const fMonth = document.getElementById('f-month').value;
-  let list = transactions.filter(t => {
-    if (fType && t.type !== fType) return false;
+  const list = transactions.filter(t => {
+    if (fType && t.type!==fType) return false;
     if (fMonth && !t.date.startsWith(fMonth)) return false;
     return true;
   });
   const el = document.getElementById('t-table');
-  if (!list.length) { el.innerHTML = '<p class="empty">ไม่มีรายการค่ะ</p>'; return; }
-  el.innerHTML = `<table>
-    <thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวดหมู่</th><th>รายละเอียด</th><th style="text-align:right">จำนวน (฿)</th><th></th></tr></thead>
-    <tbody>` + list.map(t => `<tr>
+  if (!list.length) { el.innerHTML='<p class="empty">ไม่มีรายการค่ะ</p>'; return; }
+  el.innerHTML = `<table><thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวด</th><th>รายละเอียด</th><th style="text-align:right">฿</th><th></th></tr></thead><tbody>`
+    + list.map(t => `<tr>
       <td style="white-space:nowrap">${fmtDate(t.date)}</td>
-      <td><span class="badge ${t.type}">${t.type === 'income' ? 'รายรับ' : 'รายจ่าย'}</span></td>
-      <td>${escHtml(t.cat)}</td>
-      <td>${escHtml(t.desc)}</td>
-      <td style="text-align:right"><span class="${t.type === 'income' ? 'amount-pos' : 'amount-neg'}">${t.type === 'income' ? '+' : '-'}${fmt(t.amount)}</span></td>
+      <td><span class="badge ${t.type}">${t.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
+      <td>${escHtml(t.cat)}</td><td>${escHtml(t.desc)}</td>
+      <td style="text-align:right"><span class="${t.type==='income'?'amount-pos':'amount-neg'}">${t.type==='income'?'+':'-'}${fmtFull(t.amount)}</span></td>
       <td><button class="btn sm danger" onclick="deleteTransaction(${t.id})">ลบ</button></td>
     </tr>`).join('') + '</tbody></table>';
 }
 
-/* ======== REIMBURSEMENT ======== */
+/* REIMBURSEMENT */
 function addReimbursement() {
   const person = document.getElementById('r-person').value.trim();
   const desc = document.getElementById('r-desc').value.trim();
   const amount = parseFloat(document.getElementById('r-amount').value);
   const date = document.getElementById('r-date').value;
   const note = document.getElementById('r-note').value.trim();
-  if (!person || !desc || !amount || isNaN(amount) || amount <= 0 || !date) {
-    alert('กรุณากรอกข้อมูลให้ครบ');
-    return;
-  }
-  reimbursements.unshift({ id: Date.now(), person, desc, amount, date, note, status: 'pending' });
-  saveData();
-  document.getElementById('r-person').value = '';
-  document.getElementById('r-desc').value = '';
-  document.getElementById('r-amount').value = '';
-  document.getElementById('r-note').value = '';
-  updatePersonList();
-  renderReimbursement();
+  if (!person||!desc||!amount||isNaN(amount)||amount<=0||!date) { alert('กรุณากรอกข้อมูลให้ครบค่ะ'); return; }
+  reimbursements.unshift({ id: Date.now(), person, desc, amount, date, note, status:'pending' });
+  saveBudget();
+  ['r-person','r-desc','r-amount','r-note'].forEach(id => document.getElementById(id).value='');
+  updatePersonList(); renderReimbursement();
 }
-function toggleStatus(id) {
-  const r = reimbursements.find(x => x.id === id);
-  if (r) r.status = r.status === 'pending' ? 'paid' : 'pending';
-  saveData(); renderReimbursement();
+function toggleRStatus(id) {
+  const r = reimbursements.find(x=>x.id===id);
+  if (r) r.status = r.status==='pending'?'paid':'pending';
+  saveBudget(); renderReimbursement();
 }
 function deleteReimbursement(id) {
   if (!confirm('ลบรายการนี้?')) return;
-  reimbursements = reimbursements.filter(r => r.id !== id);
-  saveData(); renderReimbursement();
-  updatePersonList();
+  reimbursements = reimbursements.filter(r=>r.id!==id);
+  saveBudget(); renderReimbursement(); updatePersonList();
 }
 function renderReimbursement() {
-  const personTotals = {};
+  const pt = {};
   reimbursements.forEach(r => {
-    if (!personTotals[r.person]) personTotals[r.person] = { total: 0, pending: 0, count: 0, paid: 0 };
-    personTotals[r.person].total += r.amount;
-    personTotals[r.person].count++;
-    if (r.status === 'pending') personTotals[r.person].pending += r.amount;
-    else personTotals[r.person].paid += r.amount;
+    if (!pt[r.person]) pt[r.person] = {total:0,pending:0,paid:0,count:0};
+    pt[r.person].total += r.amount; pt[r.person].count++;
+    if (r.status==='pending') pt[r.person].pending+=r.amount; else pt[r.person].paid+=r.amount;
   });
-  const names = Object.keys(personTotals);
-  const ps = document.getElementById('person-summary');
-  ps.innerHTML = names.length
+  const names = Object.keys(pt);
+  document.getElementById('person-summary').innerHTML = names.length
     ? '<div class="person-grid">' + names.map(n => `<div class="person-card" onclick="openPersonModal('${escAttr(n)}')">
         <div class="person-name">${escHtml(n)}</div>
-        <div class="person-pending">฿${fmt(personTotals[n].pending)}</div>
-        <div class="person-info">ค้างรับ / รวม ฿${fmt(personTotals[n].total)} · ${personTotals[n].count} รายการ</div>
-        <div class="person-tap">👆 กดดูรายละเอียด</div>
+        <div class="person-pending">฿${fmtFull(pt[n].pending)}</div>
+        <div class="person-info">ค้างรับ · รวม ฿${fmtFull(pt[n].total)} · ${pt[n].count} รายการ</div>
+        <div style="font-size:10px;color:var(--gold);margin-top:4px">กดดูรายละเอียด →</div>
       </div>`).join('') + '</div>'
     : '<p class="empty">ยังไม่มีรายการค่ะ</p>';
 
   const el = document.getElementById('r-table');
-  if (!reimbursements.length) { el.innerHTML = '<p class="empty">ยังไม่มีรายการค่ะ</p>'; return; }
-  el.innerHTML = `<table>
-    <thead><tr><th>วันที่</th><th>ชื่อ</th><th>รายละเอียด</th><th>หมายเหตุ</th><th style="text-align:right">จำนวน (฿)</th><th>สถานะ</th><th></th></tr></thead>
-    <tbody>` + reimbursements.map(r => `<tr>
+  if (!reimbursements.length) { el.innerHTML='<p class="empty">ยังไม่มีรายการค่ะ</p>'; return; }
+  el.innerHTML = `<table><thead><tr><th>วันที่</th><th>ชื่อ</th><th>รายละเอียด</th><th>หมายเหตุ</th><th style="text-align:right">฿</th><th>สถานะ</th><th></th></tr></thead><tbody>`
+    + reimbursements.map(r => `<tr>
       <td style="white-space:nowrap">${fmtDate(r.date)}</td>
       <td style="font-weight:600">${escHtml(r.person)}</td>
       <td>${escHtml(r.desc)}</td>
-      <td style="color:var(--text3)">${r.note ? escHtml(r.note) : '-'}</td>
-      <td style="text-align:right"><span class="amount-neutral">฿${fmt(r.amount)}</span></td>
-      <td><button class="btn sm" onclick="toggleStatus(${r.id})" style="${r.status === 'paid' ? 'color:var(--green);border-color:var(--green-bg)' : 'color:var(--amber);border-color:var(--amber-bg)'}">${r.status === 'paid' ? 'รับแล้ว' : 'รอรับ'}</button></td>
+      <td style="color:var(--text3)">${r.note?escHtml(r.note):'-'}</td>
+      <td style="text-align:right"><span class="amount-neutral">฿${fmtFull(r.amount)}</span></td>
+      <td><button class="btn sm" onclick="toggleRStatus(${r.id})" style="${r.status==='paid'?'color:var(--green);border-color:var(--green)':'color:var(--amber);border-color:var(--amber)'}">${r.status==='paid'?'รับแล้ว':'รอรับ'}</button></td>
       <td><button class="btn sm danger" onclick="deleteReimbursement(${r.id})">ลบ</button></td>
     </tr>`).join('') + '</tbody></table>';
 }
 
-/* ======== PERSON MODAL ======== */
+/* PERSON MODAL */
 function openPersonModal(name) {
-  const items = reimbursements.filter(r => r.person === name);
-  const total = items.reduce((s, r) => s + r.amount, 0);
-  const pending = items.filter(r => r.status === 'pending').reduce((s, r) => s + r.amount, 0);
-  const paid = items.filter(r => r.status === 'paid').reduce((s, r) => s + r.amount, 0);
-
+  const items = reimbursements.filter(r=>r.person===name);
+  const total = items.reduce((s,r)=>s+r.amount,0);
+  const pending = items.filter(r=>r.status==='pending').reduce((s,r)=>s+r.amount,0);
+  const paid = items.filter(r=>r.status==='paid').reduce((s,r)=>s+r.amount,0);
   document.getElementById('modal-person-name').textContent = name;
   document.getElementById('modal-person-stats').innerHTML = `
-    <div style="flex:1;min-width:100px;background:var(--red-bg);border-radius:var(--radius-sm);padding:9px 12px">
-      <div style="font-size:10px;color:var(--red);font-family:'IBM Plex Mono',monospace;margin-bottom:2px">ค้างรับ</div>
-      <div style="font-size:16px;font-weight:600;color:var(--red);font-family:'IBM Plex Mono',monospace">฿${fmt(pending)}</div>
+    <div style="flex:1;min-width:90px;background:var(--red-bg);border-radius:var(--radius-xs);padding:8px 11px">
+      <div style="font-size:9px;color:var(--red);font-family:'IBM Plex Mono',monospace;margin-bottom:2px">ค้างรับ</div>
+      <div style="font-size:15px;font-weight:600;color:var(--red);font-family:'IBM Plex Mono',monospace">฿${fmtFull(pending)}</div>
     </div>
-    <div style="flex:1;min-width:100px;background:var(--green-bg);border-radius:var(--radius-sm);padding:9px 12px">
-      <div style="font-size:10px;color:var(--green);font-family:'IBM Plex Mono',monospace;margin-bottom:2px">รับแล้ว</div>
-      <div style="font-size:16px;font-weight:600;color:var(--green);font-family:'IBM Plex Mono',monospace">฿${fmt(paid)}</div>
+    <div style="flex:1;min-width:90px;background:var(--green-bg);border-radius:var(--radius-xs);padding:8px 11px">
+      <div style="font-size:9px;color:var(--green);font-family:'IBM Plex Mono',monospace;margin-bottom:2px">รับแล้ว</div>
+      <div style="font-size:15px;font-weight:600;color:var(--green);font-family:'IBM Plex Mono',monospace">฿${fmtFull(paid)}</div>
     </div>
-    <div style="flex:1;min-width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px">
-      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:2px">ยอดรวมทั้งหมด</div>
-      <div style="font-size:16px;font-weight:600;font-family:'IBM Plex Mono',monospace">฿${fmt(total)}</div>
+    <div style="flex:1;min-width:90px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:8px 11px">
+      <div style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:2px">ยอดรวม</div>
+      <div style="font-size:15px;font-weight:600;font-family:'IBM Plex Mono',monospace">฿${fmtFull(total)}</div>
     </div>`;
-
-  document.getElementById('modal-person-table').innerHTML = `<table>
-    <thead><tr><th>วันที่</th><th>รายละเอียด</th><th>หมายเหตุ</th><th style="text-align:right">จำนวน (฿)</th><th>สถานะ</th></tr></thead>
-    <tbody>` + items.map(r => `<tr>
+  document.getElementById('modal-person-table').innerHTML = `<table><thead><tr><th>วันที่</th><th>รายละเอียด</th><th>หมายเหตุ</th><th style="text-align:right">฿</th><th>สถานะ</th></tr></thead><tbody>`
+    + items.map(r => `<tr>
       <td style="white-space:nowrap">${fmtDate(r.date)}</td>
       <td>${escHtml(r.desc)}</td>
-      <td style="color:var(--text3)">${r.note ? escHtml(r.note) : '-'}</td>
-      <td style="text-align:right"><span class="amount-neutral">฿${fmt(r.amount)}</span></td>
-      <td><span class="badge ${r.status === 'paid' ? 'paid' : 'pending'}">${r.status === 'paid' ? 'รับแล้ว' : 'รอรับ'}</span></td>
+      <td style="color:var(--text3)">${r.note?escHtml(r.note):'-'}</td>
+      <td style="text-align:right"><span class="amount-neutral">฿${fmtFull(r.amount)}</span></td>
+      <td><span class="badge ${r.status==='paid'?'paid':'pending'}">${r.status==='paid'?'รับแล้ว':'รอรับ'}</span></td>
     </tr>`).join('') + '</tbody></table>';
-
   document.getElementById('person-modal').classList.add('open');
 }
-function closeModal() {
-  document.getElementById('person-modal').classList.remove('open');
-}
-document.getElementById('person-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
+function closePersonModal() { document.getElementById('person-modal').classList.remove('open'); }
+document.getElementById('person-modal').addEventListener('click', function(e){ if(e.target===this) closePersonModal(); });
 
-/* ======== DEBT ======== */
+/* DEBT */
 function addDebt() {
   const name = document.getElementById('d-name').value.trim();
   const desc = document.getElementById('d-desc').value.trim();
   const amount = parseFloat(document.getElementById('d-amount').value);
   const due = document.getElementById('d-due').value;
   const note = document.getElementById('d-note').value.trim();
-  if (!name || !amount || isNaN(amount) || amount <= 0) {
-    alert('กรุณากรอกชื่อและจำนวนเงินค่ะ');
-    return;
-  }
-  debts.unshift({ id: Date.now(), name, desc, amount, paid: 0, due, note, status: 'unpaid' });
-  saveData();
-  document.getElementById('d-name').value = '';
-  document.getElementById('d-desc').value = '';
-  document.getElementById('d-amount').value = '';
-  document.getElementById('d-due').value = '';
-  document.getElementById('d-note').value = '';
+  if (!name||!amount||isNaN(amount)||amount<=0) { alert('กรุณากรอกชื่อและจำนวนเงินค่ะ'); return; }
+  debts.unshift({ id: Date.now(), name, desc, amount, paid:0, due, note, status:'unpaid' });
+  saveBudget();
+  ['d-name','d-desc','d-amount','d-due','d-note'].forEach(id=>document.getElementById(id).value='');
   renderDebt();
 }
 function payDebt(id) {
-  const d = debts.find(x => x.id === id);
-  if (!d) return;
-  const amt = parseFloat(prompt(`จ่ายหนี้ "${d.name}" เท่าไหร่? (ค้างอยู่ ฿${fmt(d.amount - d.paid)})`));
-  if (isNaN(amt) || amt <= 0) return;
-  d.paid = Math.min(d.amount, (d.paid || 0) + amt);
-  if (d.paid >= d.amount) d.status = 'paid';
-  saveData(); renderDebt();
+  const d = debts.find(x=>x.id===id); if (!d) return;
+  const amt = parseFloat(prompt(`จ่าย "${d.name}" เท่าไหร่?\n(ค้างอยู่ ฿${fmtFull(d.amount-(d.paid||0))})`));
+  if (isNaN(amt)||amt<=0) return;
+  d.paid = Math.min(d.amount, (d.paid||0)+amt);
+  if (d.paid>=d.amount) d.status='paid';
+  saveBudget(); renderDebt();
 }
 function deleteDebt(id) {
   if (!confirm('ลบรายการหนี้นี้?')) return;
-  debts = debts.filter(d => d.id !== id);
-  saveData(); renderDebt();
+  debts = debts.filter(d=>d.id!==id);
+  saveBudget(); renderDebt();
 }
 function renderDebt() {
-  const totalDebt = debts.reduce((s, d) => s + d.amount, 0);
-  const totalPaid = debts.reduce((s, d) => s + (d.paid || 0), 0);
+  const totalDebt = debts.reduce((s,d)=>s+d.amount,0);
+  const totalPaid = debts.reduce((s,d)=>s+(d.paid||0),0);
   const remaining = totalDebt - totalPaid;
-  const unpaidCount = debts.filter(d => d.status !== 'paid').length;
-
-  document.getElementById('debt-summary-stats').innerHTML = `<div class="debt-summary">
-    <div class="debt-stat">
-      <div class="debt-stat-label">หนี้ทั้งหมด</div>
-      <div class="debt-stat-val" style="color:var(--purple)">฿${fmt(totalDebt)}</div>
-    </div>
-    <div class="debt-stat">
-      <div class="debt-stat-label">จ่ายแล้ว</div>
-      <div class="debt-stat-val" style="color:var(--green)">฿${fmt(totalPaid)}</div>
-    </div>
-    <div class="debt-stat">
-      <div class="debt-stat-label">ยังค้างชำระ</div>
-      <div class="debt-stat-val" style="color:var(--red)">฿${fmt(remaining)}</div>
-    </div>
-    <div class="debt-stat">
-      <div class="debt-stat-label">รายการค้าง</div>
-      <div class="debt-stat-val">${unpaidCount} รายการ</div>
-    </div>
+  const unpaidCount = debts.filter(d=>d.status!=='paid').length;
+  document.getElementById('debt-summary-stats').innerHTML = `<div class="debt-summary-grid">
+    <div class="debt-stat"><div class="debt-stat-label">หนี้ทั้งหมด</div><div class="debt-stat-val" style="color:var(--purple)">฿${fmt(totalDebt)}</div></div>
+    <div class="debt-stat"><div class="debt-stat-label">จ่ายแล้ว</div><div class="debt-stat-val" style="color:var(--green)">฿${fmt(totalPaid)}</div></div>
+    <div class="debt-stat"><div class="debt-stat-label">คงค้าง</div><div class="debt-stat-val" style="color:var(--red)">฿${fmt(remaining)}</div></div>
+    <div class="debt-stat"><div class="debt-stat-label">รายการค้าง</div><div class="debt-stat-val">${unpaidCount}</div></div>
   </div>`;
-
   const el = document.getElementById('d-table');
-  if (!debts.length) { el.innerHTML = '<p class="empty">ยังไม่มีรายการหนี้สินค่ะ</p>'; return; }
-  el.innerHTML = `<table>
-    <thead><tr><th>เจ้าหนี้/รายการ</th><th>รายละเอียด</th><th style="text-align:right">ยอดหนี้ (฿)</th><th style="text-align:right">จ่ายแล้ว (฿)</th><th style="text-align:right">คงเหลือ (฿)</th><th>ครบกำหนด</th><th>สถานะ</th><th></th></tr></thead>
-    <tbody>` + debts.map(d => {
-      const rem = d.amount - (d.paid || 0);
-      const pct = d.amount > 0 ? Math.round((d.paid || 0) / d.amount * 100) : 0;
+  if (!debts.length) { el.innerHTML='<p class="empty">ยังไม่มีรายการหนี้สินค่ะ</p>'; return; }
+  el.innerHTML = `<table><thead><tr><th>รายการ</th><th style="text-align:right">ยอดหนี้</th><th style="text-align:right">จ่ายแล้ว</th><th style="text-align:right">คงเหลือ</th><th>ครบกำหนด</th><th>สถานะ</th><th></th></tr></thead><tbody>`
+    + debts.map(d => {
+      const rem = d.amount-(d.paid||0);
+      const pct = d.amount>0?Math.round((d.paid||0)/d.amount*100):0;
       return `<tr>
-        <td style="font-weight:600">${escHtml(d.name)}</td>
-        <td style="color:var(--text3)">${d.desc ? escHtml(d.desc) : '-'}</td>
-        <td style="text-align:right"><span class="amount-neutral">฿${fmt(d.amount)}</span></td>
-        <td style="text-align:right"><span class="amount-pos">฿${fmt(d.paid || 0)}</span></td>
-        <td style="text-align:right"><span class="amount-neg">฿${fmt(rem)}</span></td>
-        <td style="white-space:nowrap;color:var(--text3)">${d.due ? fmtDate(d.due) : '-'}</td>
-        <td>
-          <span class="badge ${d.status === 'paid' ? 'paid' : 'debt'}">${d.status === 'paid' ? 'ชำระแล้ว' : `${pct}%`}</span>
-        </td>
-        <td style="display:flex;gap:4px;flex-wrap:nowrap">
-          ${d.status !== 'paid' ? `<button class="btn sm" onclick="payDebt(${d.id})" style="color:var(--green);border-color:var(--green-bg)">จ่าย</button>` : ''}
+        <td style="font-weight:600">${escHtml(d.name)}${d.desc?`<br><span style="font-size:10px;color:var(--text3);font-weight:400">${escHtml(d.desc)}</span>`:''}</td>
+        <td style="text-align:right"><span class="amount-neutral">฿${fmtFull(d.amount)}</span></td>
+        <td style="text-align:right"><span class="amount-pos">฿${fmtFull(d.paid||0)}</span></td>
+        <td style="text-align:right"><span class="amount-neg">฿${fmtFull(rem)}</span></td>
+        <td style="white-space:nowrap;color:var(--text3)">${d.due?fmtDate(d.due):'-'}</td>
+        <td><span class="badge ${d.status==='paid'?'paid':'debt'}">${d.status==='paid'?'ชำระแล้ว':pct+'%'}</span></td>
+        <td style="display:flex;gap:4px">
+          ${d.status!=='paid'?`<button class="btn sm" onclick="payDebt(${d.id})" style="color:var(--green);border-color:var(--green-bg)">จ่าย</button>`:''}
           <button class="btn sm danger" onclick="deleteDebt(${d.id})">ลบ</button>
         </td>
       </tr>`;
     }).join('') + '</tbody></table>';
 }
 
-/* ======== DASHBOARD ======== */
-function renderDashboard() {
-  const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+/* DASHBOARD */
+function renderBudgetDashboard() {
+  const totalIncome = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const totalExpense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
   const balance = totalIncome - totalExpense;
-  const pendingReimb = reimbursements.filter(r => r.status === 'pending').reduce((s, r) => s + r.amount, 0);
-  const totalDebtLeft = debts.reduce((s, d) => s + (d.amount - (d.paid || 0)), 0);
-
-  document.getElementById('metrics').innerHTML = `
+  const pendingReimb = reimbursements.filter(r=>r.status==='pending').reduce((s,r)=>s+r.amount,0);
+  const totalDebtLeft = debts.reduce((s,d)=>s+(d.amount-(d.paid||0)),0);
+  document.getElementById('b-metrics').innerHTML = `
     <div class="metric"><div class="metric-label">รายรับทั้งหมด</div><div class="metric-value g">฿${fmt(totalIncome)}</div></div>
     <div class="metric"><div class="metric-label">รายจ่ายทั้งหมด</div><div class="metric-value r">฿${fmt(totalExpense)}</div></div>
-    <div class="metric"><div class="metric-label">คงเหลือสุทธิ</div><div class="metric-value ${balance >= 0 ? 'g' : 'r'}">฿${fmt(balance)}</div></div>
+    <div class="metric"><div class="metric-label">คงเหลือสุทธิ</div><div class="metric-value ${balance>=0?'g':'r'}">฿${fmt(balance)}</div></div>
     <div class="metric"><div class="metric-label">สำรองค้างรับ</div><div class="metric-value b">฿${fmt(pendingReimb)}</div></div>
     <div class="metric"><div class="metric-label">หนี้ค้างชำระ</div><div class="metric-value p">฿${fmt(totalDebtLeft)}</div></div>`;
 
-  // Bar chart 6 months
-  const now = new Date();
-  const months = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push({
-      key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
-      label: ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()]
-    });
+  const now = new Date(); const months = [];
+  for (let i=5;i>=0;i--) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push({ key: d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'), label: ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()] });
   }
-  const incData = months.map(m => Math.round(transactions.filter(t => t.type === 'income' && t.date.startsWith(m.key)).reduce((s, t) => s + t.amount, 0)));
-  const expData = months.map(m => Math.round(transactions.filter(t => t.type === 'expense' && t.date.startsWith(m.key)).reduce((s, t) => s + t.amount, 0)));
+  const incData = months.map(m=>Math.round(transactions.filter(t=>t.type==='income'&&t.date.startsWith(m.key)).reduce((s,t)=>s+t.amount,0)));
+  const expData = months.map(m=>Math.round(transactions.filter(t=>t.type==='expense'&&t.date.startsWith(m.key)).reduce((s,t)=>s+t.amount,0)));
 
   if (barChartInst) barChartInst.destroy();
   barChartInst = new Chart(document.getElementById('barChart'), {
-    type: 'bar',
-    data: {
-      labels: months.map(m => m.label),
-      datasets: [
-        { label: 'รายรับ', data: incData, backgroundColor: '#2d6a4f', borderRadius: 4 },
-        { label: 'รายจ่าย', data: expData, backgroundColor: '#f0997b', borderRadius: 4 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false } },
-        y: { ticks: { callback: v => '฿' + fmt(v), font: { size: 10 } }, grid: { color: '#e2ddd7' } }
-      }
+    type:'bar',
+    data:{ labels:months.map(m=>m.label), datasets:[
+      { label:'รายรับ', data:incData, backgroundColor:'#4a9e6a', borderRadius:4 },
+      { label:'รายจ่าย', data:expData, backgroundColor:'#e05c3a', borderRadius:4 }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ x:{grid:{color:'#3a3530'},ticks:{color:'#5a5550',font:{size:10}}}, y:{grid:{color:'#3a3530'},ticks:{color:'#5a5550',font:{size:10},callback:v=>'฿'+fmt(v)}} }
     }
   });
-  document.getElementById('barLegend').innerHTML = `<div class="legend-item"><span class="legend-dot" style="background:#2d6a4f"></span>รายรับ</div><div class="legend-item"><span class="legend-dot" style="background:#f0997b"></span>รายจ่าย</div>`;
+  document.getElementById('barLegend').innerHTML = `<div class="legend-item"><span class="legend-dot" style="background:#4a9e6a"></span>รายรับ</div><div class="legend-item"><span class="legend-dot" style="background:#e05c3a"></span>รายจ่าย</div>`;
 
-  // PCT BARS (category % of expense)
   const cats = {};
-  transactions.filter(t => t.type === 'expense').forEach(t => { cats[t.cat] = (cats[t.cat] || 0) + t.amount; });
-  const catKeys = Object.keys(cats).sort((a, b) => cats[b] - cats[a]);
-  const colors = ['#c1440e','#2d6a4f','#1a4f8a','#92600a','#6b3a7d','#1a6b6b','#7a3f1a','#4a6741'];
-  const expTotal = Object.values(cats).reduce((a, b) => a + b, 0);
-  const pctEl = document.getElementById('pct-bars');
-  if (catKeys.length > 0) {
-    pctEl.innerHTML = catKeys.map((k, i) => {
-      const pct = expTotal > 0 ? Math.round(cats[k] / expTotal * 100) : 0;
-      return `<div class="pct-bar-wrap">
-        <div class="pct-bar-label"><span>${escHtml(k)}</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:600">${pct}% · ฿${fmt(cats[k])}</span></div>
-        <div class="pct-bar-track"><div class="pct-bar-fill" style="width:${pct}%;background:${colors[i % colors.length]}"></div></div>
-      </div>`;
-    }).join('');
-  } else {
-    pctEl.innerHTML = '<p class="empty" style="padding:1rem">ยังไม่มีรายจ่าย</p>';
-  }
+  transactions.filter(t=>t.type==='expense').forEach(t=>{ cats[t.cat]=(cats[t.cat]||0)+t.amount; });
+  const catKeys = Object.keys(cats).sort((a,b)=>cats[b]-cats[a]);
+  const colors = ['#c9a84c','#4a9e6a','#4a7eb8','#8a5ec8','#e05c3a','#c88a3a','#1a6b6b','#7a3f1a'];
+  const expTotal = Object.values(cats).reduce((a,b)=>a+b,0);
 
-  // PIE chart
+  const pctEl = document.getElementById('pct-bars');
+  pctEl.innerHTML = catKeys.length ? catKeys.map((k,i)=>{
+    const pct = expTotal>0?Math.round(cats[k]/expTotal*100):0;
+    return `<div class="pct-bar-wrap">
+      <div class="pct-bar-label"><span>${escHtml(k)}</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:600">${pct}% · ฿${fmtFull(cats[k])}</span></div>
+      <div class="pct-bar-track"><div class="pct-bar-fill" style="width:${pct}%;background:${colors[i%colors.length]}"></div></div>
+    </div>`;
+  }).join('') : '<p class="empty" style="padding:1rem">ยังไม่มีรายจ่าย</p>';
+
   if (pieChartInst) pieChartInst.destroy();
-  if (catKeys.length > 0) {
+  if (catKeys.length>0) {
     pieChartInst = new Chart(document.getElementById('pieChart'), {
-      type: 'doughnut',
-      data: {
-        labels: catKeys,
-        datasets: [{ data: catKeys.map(k => Math.round(cats[k])), backgroundColor: catKeys.map((_, i) => colors[i % colors.length]), borderWidth: 0 }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      type:'doughnut',
+      data:{ labels:catKeys, datasets:[{ data:catKeys.map(k=>Math.round(cats[k])), backgroundColor:catKeys.map((_,i)=>colors[i%colors.length]), borderWidth:0 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
     });
-    document.getElementById('pieLegend').innerHTML = catKeys.map((k, i) =>
-      `<div class="legend-item"><span class="legend-dot" style="background:${colors[i % colors.length]}"></span>${escHtml(k)} ${expTotal > 0 ? Math.round(cats[k] / expTotal * 100) : 0}%</div>`
+    document.getElementById('pieLegend').innerHTML = catKeys.map((k,i)=>
+      `<div class="legend-item"><span class="legend-dot" style="background:${colors[i%colors.length]}"></span>${escHtml(k)} ${expTotal>0?Math.round(cats[k]/expTotal*100):0}%</div>`
     ).join('');
   } else {
-    document.getElementById('pieLegend').innerHTML = '<span style="color:var(--text3);font-size:13px">ยังไม่มีรายจ่ายค่ะ</span>';
+    document.getElementById('pieLegend').innerHTML='<span style="color:var(--text3);font-size:12px">ยังไม่มีรายจ่ายค่ะ</span>';
   }
 }
 
-/* ======== UTILS ======== */
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+/* ============================
+   TODO
+   ============================ */
+const todoCatColors = { ทั่วไป:'#9a9087', งาน:'#4a7eb8', ส่วนตัว:'#8a5ec8', ซื้อของ:'#c9a84c', สุขภาพ:'#4a9e6a', อื่นๆ:'#c88a3a' };
+let todoFilter = 'ทั้งหมด';
+
+function addTodo() {
+  const text = document.getElementById('todo-input').value.trim();
+  const cat = document.getElementById('todo-cat-input').value;
+  if (!text) return;
+  todos.unshift({ id: Date.now(), text, cat, done: false, createdAt: new Date().toISOString() });
+  localStorage.setItem('ball_todo', JSON.stringify(todos));
+  document.getElementById('todo-input').value = '';
+  renderTodo(); renderHomeStats();
 }
-function escAttr(s) {
-  return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+function toggleTodo(id) {
+  const t = todos.find(x=>x.id===id); if(t) t.done=!t.done;
+  localStorage.setItem('ball_todo', JSON.stringify(todos));
+  renderTodo(); renderHomeStats();
+}
+function deleteTodo(id) {
+  todos = todos.filter(t=>t.id!==id);
+  localStorage.setItem('ball_todo', JSON.stringify(todos));
+  renderTodo(); renderHomeStats();
+}
+function renderTodo() {
+  const allCats = ['ทั้งหมด', ...Object.keys(todoCatColors)];
+  document.getElementById('todo-filter-btns').innerHTML = allCats.map(c=>
+    `<button class="cat-filter-btn ${todoFilter===c?'active':''}" onclick="setTodoFilter('${c}')">${c}</button>`
+  ).join('');
+
+  const filtered = todoFilter==='ทั้งหมด' ? todos : todos.filter(t=>t.cat===todoFilter);
+  const pending = filtered.filter(t=>!t.done);
+  const done = filtered.filter(t=>t.done);
+
+  const pendingCount = todos.filter(t=>!t.done).length;
+  document.getElementById('todo-count').textContent = pendingCount + ' รายการ';
+
+  const renderItem = t => `<div class="todo-item ${t.done?'done':''}" onclick="toggleTodo(${t.id})">
+    <div class="todo-check"><div class="todo-check-inner"></div></div>
+    <div class="todo-text">${escHtml(t.text)}</div>
+    <span class="todo-cat-badge" style="background:${todoCatColors[t.cat]||'#9a9087'}22;color:${todoCatColors[t.cat]||'#9a9087'}">${t.cat}</span>
+    <button class="btn sm danger" onclick="event.stopPropagation();deleteTodo(${t.id})" style="flex-shrink:0">ลบ</button>
+  </div>`;
+
+  document.getElementById('todo-list').innerHTML = pending.length ? pending.map(renderItem).join('') : '<p class="empty">ไม่มีรายการที่ต้องทำค่ะ ✨</p>';
+  document.getElementById('todo-done-list').innerHTML = done.length ? done.map(renderItem).join('') : '<p class="empty" style="padding:0.75rem">-</p>';
+}
+function setTodoFilter(f) { todoFilter=f; renderTodo(); }
+
+/* ============================
+   MANGA
+   ============================ */
+function switchMangaTab(t) {
+  document.querySelectorAll('#page-manga .nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#page-manga .inner-section').forEach(s=>s.classList.remove('active'));
+  document.querySelector(`#page-manga .nav-btn[onclick="switchMangaTab('${t}')"]`).classList.add('active');
+  document.getElementById('mtab-'+t).classList.add('active');
+  if(t==='reading') renderManga();
+}
+function addManga() {
+  const title = document.getElementById('m-title').value.trim();
+  const url = document.getElementById('m-url').value.trim();
+  const chapter = document.getElementById('m-chapter').value;
+  const status = document.getElementById('m-status').value;
+  const note = document.getElementById('m-note').value.trim();
+  if (!title) { alert('กรุณากรอกชื่อมังงะค่ะ'); return; }
+  mangas.unshift({ id:Date.now(), title, url, chapter:chapter||0, status, note, addedAt:new Date().toISOString() });
+  localStorage.setItem('ball_manga', JSON.stringify(mangas));
+  ['m-title','m-url','m-chapter','m-note'].forEach(id=>document.getElementById(id).value='');
+  switchMangaTab('reading');
+  renderHomeStats();
+}
+function updateMangaChapter(id) {
+  const m = mangas.find(x=>x.id===id); if(!m) return;
+  const ch = prompt('อ่านถึงตอนที่เท่าไหร่แล้ว?', m.chapter||0);
+  if (ch!==null && !isNaN(parseInt(ch))) { m.chapter=parseInt(ch); localStorage.setItem('ball_manga',JSON.stringify(mangas)); renderManga(); }
+}
+function updateMangaStatus(id, status) {
+  const m = mangas.find(x=>x.id===id); if(!m) return;
+  m.status=status; localStorage.setItem('ball_manga',JSON.stringify(mangas)); renderManga();
+}
+function deleteManga(id) {
+  if(!confirm('ลบมังงะนี้?')) return;
+  mangas = mangas.filter(m=>m.id!==id);
+  localStorage.setItem('ball_manga',JSON.stringify(mangas)); renderManga(); renderHomeStats();
+}
+function renderManga() {
+  const statusLabels = { reading:'กำลังอ่าน', finished:'อ่านจบแล้ว', paused:'พักไว้ก่อน' };
+  const statusColors = { reading:'var(--gold)', finished:'var(--green)', paused:'var(--text3)' };
+
+  const renderList = (items, emptyMsg) => {
+    if (!items.length) return `<p class="empty">${emptyMsg}</p>`;
+    return '<div class="manga-saved-list">' + items.map(m => `
+      <div class="manga-saved-item">
+        <div class="manga-saved-emoji">📖</div>
+        <div class="manga-saved-info">
+          <div class="manga-saved-title">${escHtml(m.title)}</div>
+          <div class="manga-saved-meta">ตอนที่ ${m.chapter||0} · <span style="color:${statusColors[m.status]||'var(--text3)'}">${statusLabels[m.status]||m.status}</span></div>
+          ${m.note?`<div style="font-size:11px;color:var(--text3);margin-top:2px">${escHtml(m.note)}</div>`:''}
+        </div>
+        <div class="manga-saved-actions">
+          <button class="btn sm" onclick="updateMangaChapter(${m.id})" style="color:var(--gold);border-color:var(--gold-bg)">ตอน</button>
+          ${m.url?`<a class="btn sm" href="${escHtml(m.url)}" target="_blank" style="color:var(--blue);border-color:var(--blue-bg);text-decoration:none">อ่าน</a>`:''}
+          <button class="btn sm danger" onclick="deleteManga(${m.id})">ลบ</button>
+        </div>
+      </div>`).join('') + '</div>';
+  };
+
+  document.getElementById('manga-reading-list').innerHTML = renderList(mangas.filter(m=>m.status==='reading'||m.status==='paused'), 'ยังไม่มีมังงะที่กำลังอ่านค่ะ');
+  document.getElementById('manga-finished-list').innerHTML = renderList(mangas.filter(m=>m.status==='finished'), 'ยังไม่มีมังงะที่อ่านจบค่ะ');
 }
 
-/* ======== INIT ======== */
+/* ============================
+   INIT
+   ============================ */
 const today = new Date().toISOString().split('T')[0];
+const dayNames = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+const d = new Date();
+const thMonth = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()];
+document.getElementById('home-date').textContent = `วัน${dayNames[d.getDay()]}ที่ ${d.getDate()} ${thMonth} ${d.getFullYear()+543}`;
+
 document.getElementById('t-date').value = today;
 document.getElementById('r-date').value = today;
-document.getElementById('f-month').value = today.substring(0, 7);
-updateCatList();
-updatePersonList();
-renderDashboard();
+document.getElementById('f-month').value = today.substring(0,7);
+
+renderHomeStats();
 </script>
 </body>
 </html>
