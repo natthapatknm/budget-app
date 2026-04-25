@@ -133,6 +133,8 @@ body {
 .home-topbar {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
   padding: 0.75rem 0 0;
 }
 .sync-badge {
@@ -519,7 +521,8 @@ tr:hover td { background: var(--surface2); }
   <div class="home-grid-bg"></div>
   <div class="home-content">
     <div class="home-topbar">
-      <div class="sync-badge" id="sync-status">☁️ กำลังโหลด...</div>
+      <div class="sync-badge" id="sync-status" onclick="loadFromSupabase()" style="cursor:pointer" title="กดเพื่อ sync ใหม่">☁️ กำลังโหลด...</div>
+      <button onclick="showKeySetupBanner()" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px 4px;line-height:1" title="ตั้งค่า Supabase Key">⚙️</button>
     </div>
     <div class="home-header">
       <div class="home-logo-wrap">
@@ -813,7 +816,8 @@ tr:hover td { background: var(--surface2); }
    SUPABASE CONFIG
    ============================ */
 const SB_URL = "https://vtgjxaegdnmmmdxdlgav.supabase.co/rest/v1";
-const SB_KEY = "sb_publishable_fdDFw98g3YBXH-2p6lMpVA_7t7Wt3mo";
+// anon key จาก Supabase Dashboard > Settings > API > anon public
+let SB_KEY = localStorage.getItem('knm_sb_key') || "";
 
 // Supabase REST helper
 // NOTE: ต้องสร้าง table ใน Supabase ก่อน:
@@ -869,30 +873,39 @@ async function syncToSupabase() {
     updated_at: new Date().toISOString()
   };
   // upsert
-  await sbFetch('app_data', 'POST', [payload], '?on_conflict=id');
+  const result = await sbFetch('app_data', 'POST', [payload], '?on_conflict=id');
+  return result !== null;
 }
 
 // ---- Load from Supabase (on startup) ----
 async function loadFromSupabase() {
+  if (!SB_KEY) {
+    showSyncStatus('🔑 ยังไม่ตั้ง key', 'error');
+    showKeySetupBanner();
+    return;
+  }
   showSyncStatus('⏳ กำลังโหลด...', '');
-  const rows = await sbFetch('app_data', 'GET', null, '?id=eq.knm_main');
-  if (rows && rows.length > 0) {
-    const r = rows[0];
-    try {
+  try {
+    const rows = await sbFetch('app_data', 'GET', null, '?id=eq.knm_main');
+    if (rows === null) {
+      showSyncStatus('❌ เชื่อมต่อไม่ได้', 'error');
+      showKeySetupBanner('key อาจไม่ถูกต้อง หรือ table ยังไม่ถูกสร้าง');
+      return;
+    }
+    if (rows.length > 0) {
+      const r = rows[0];
       const tx = JSON.parse(r.transactions || '[]');
       const re = JSON.parse(r.reimbursements || '[]');
       const db = JSON.parse(r.debts || '[]');
       const td = JSON.parse(r.todos || '[]');
       const mg = JSON.parse(r.mangas || '[]');
       const ml = JSON.parse(r.mylinks || '[]');
-      // merge: use whichever is newer (more items wins as simple heuristic)
       if (tx.length >= transactions.length) transactions = tx;
       if (re.length >= reimbursements.length) reimbursements = re;
       if (db.length >= debts.length) debts = db;
       if (td.length >= todos.length) todos = td;
       if (mg.length >= mangas.length) mangas = mg;
       if (ml.length >= (typeof myLinks !== 'undefined' ? myLinks.length : 0)) myLinks = ml;
-      // update localStorage
       localStorage.setItem('ball_tx', JSON.stringify(transactions));
       localStorage.setItem('ball_re', JSON.stringify(reimbursements));
       localStorage.setItem('ball_debt', JSON.stringify(debts));
@@ -900,14 +913,51 @@ async function loadFromSupabase() {
       localStorage.setItem('ball_manga', JSON.stringify(mangas));
       localStorage.setItem('ball_mylinks', JSON.stringify(myLinks));
       showSyncStatus('☁️ ซิงก์แล้ว', 'synced');
-    } catch(e) { showSyncStatus('⚠️ โหลดข้อมูลล้มเหลว', 'error'); }
-  } else {
-    // No cloud data yet — push local data up
-    showSyncStatus('📤 อัปโหลดครั้งแรก...', '');
-    await syncToSupabase();
-    showSyncStatus('☁️ พร้อมใช้งาน', 'synced');
+      hideKeySetupBanner();
+    } else {
+      showSyncStatus('📤 อัปโหลดครั้งแรก...', '');
+      await syncToSupabase();
+      showSyncStatus('☁️ พร้อมใช้งาน', 'synced');
+      hideKeySetupBanner();
+    }
+  } catch(e) {
+    showSyncStatus('❌ เกิดข้อผิดพลาด', 'error');
+    console.error(e);
   }
   renderHomeStats();
+}
+
+function showKeySetupBanner(extraMsg='') {
+  let banner = document.getElementById('key-setup-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'key-setup-banner';
+    banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:500;background:#1e1b17;border-top:2px solid #c9a84c;padding:1rem 1.25rem;';
+    document.body.appendChild(banner);
+  }
+  banner.innerHTML = `
+    <div style="max-width:500px;margin:0 auto">
+      <div style="font-size:12px;font-weight:600;color:#c9a84c;margin-bottom:6px">🔑 ตั้งค่า Supabase Anon Key</div>
+      <div style="font-size:11px;color:#9a9087;margin-bottom:8px">ไปที่ Supabase Dashboard → Settings → API → คัดลอก <b style="color:#f0ebe3">anon public</b> key (ขึ้นต้นด้วย eyJ...)${extraMsg ? '<br><span style="color:#e05c3a">'+extraMsg+'</span>' : ''}</div>
+      <div style="display:flex;gap:8px">
+        <input id="sb-key-input" type="text" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          style="flex:1;padding:8px 10px;font-size:12px;background:#262320;border:1px solid #3a3530;border-radius:6px;color:#f0ebe3;font-family:'IBM Plex Mono',monospace">
+        <button onclick="saveAnonKey()" style="padding:8px 16px;background:#c9a84c;color:#0e0d0b;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">บันทึก</button>
+        <button onclick="hideKeySetupBanner()" style="padding:8px 12px;background:#262320;color:#9a9087;border:1px solid #3a3530;border-radius:6px;cursor:pointer;font-size:13px">ปิด</button>
+      </div>
+    </div>`;
+  banner.style.display = 'block';
+}
+function hideKeySetupBanner() {
+  const b = document.getElementById('key-setup-banner');
+  if (b) b.style.display = 'none';
+}
+async function saveAnonKey() {
+  const val = document.getElementById('sb-key-input').value.trim();
+  if (!val || !val.startsWith('eyJ')) { alert('Key ไม่ถูกต้องค่ะ ต้องขึ้นต้นด้วย eyJ...'); return; }
+  SB_KEY = val;
+  localStorage.setItem('knm_sb_key', val);
+  await loadFromSupabase();
 }
 
 function showSyncStatus(msg, cls) {
@@ -924,12 +974,15 @@ function saveAll() {
   localStorage.setItem('ball_todo', JSON.stringify(todos));
   localStorage.setItem('ball_manga', JSON.stringify(mangas));
   // debounce cloud sync
-  clearTimeout(syncTimer);
-  syncTimer = setTimeout(async () => {
-    showSyncStatus('⏳ กำลังบันทึก...', '');
-    await syncToSupabase();
-    showSyncStatus('☁️ ซิงก์แล้ว', 'synced');
-  }, 1500);
+  if (SB_KEY) {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(async () => {
+      showSyncStatus('⏳ กำลังบันทึก...', '');
+      const ok = await syncToSupabase();
+      if (ok) showSyncStatus('☁️ ซิงก์แล้ว', 'synced');
+      else showSyncStatus('❌ sync ล้มเหลว', 'error');
+    }, 1500);
+  }
 }
 function saveBudget() {
   localStorage.setItem('ball_tx', JSON.stringify(transactions));
