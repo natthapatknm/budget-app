@@ -825,20 +825,22 @@ let barChartInst = null, pieChartInst = null;
 let saveTimer = null, syncTimer = null;
 
 function saveAll() {
+  // Save locally FIRST — instant, never blocks
   localStorage.setItem('ball_tx',      JSON.stringify(transactions));
   localStorage.setItem('ball_re',      JSON.stringify(reimbursements));
   localStorage.setItem('ball_debt',    JSON.stringify(debts));
   localStorage.setItem('ball_todo',    JSON.stringify(todos));
   localStorage.setItem('ball_manga',   JSON.stringify(mangas));
   localStorage.setItem('ball_mylinks', JSON.stringify(myLinks));
+  // Then background-sync to cloud (debounced, non-blocking)
   if (SB_KEY) {
     clearTimeout(syncTimer);
-    syncTimer = setTimeout(async () => {
-      showSyncStatus('⏳ กำลังบันทึก...', '');
-      const ok = await syncToSupabase();
-      if (ok) showSyncStatus('☁️ ซิงก์แล้ว', 'synced');
-      else showSyncStatus('❌ sync ล้มเหลว', 'error');
-    }, 1500);
+    syncTimer = setTimeout(() => {
+      showSyncStatus('⏳ ...', '');
+      syncToSupabase().then(ok => {
+        showSyncStatus(ok ? '☁️ ซิงก์แล้ว' : '❌ sync ล้มเหลว', ok ? 'synced' : 'error');
+      }).catch(() => showSyncStatus('❌ sync ล้มเหลว', 'error'));
+    }, 2000);
   }
 }
 
@@ -951,7 +953,12 @@ async function loadFromSupabase() {
     showSyncStatus('❌ ' + e.message, 'error');
     showKeySetupBanner(e.message);
   }
+  // Re-render after cloud data loaded
   renderHomeStats();
+  if (document.getElementById('tab-dashboard') && 
+      document.getElementById('tab-dashboard').classList.contains('active')) {
+    renderBudgetDashboard();
+  }
 }
 
 function showKeySetupBanner(extraMsg='') {
@@ -1006,7 +1013,7 @@ async function testAndLoad() {
   try {
     await sbXhr('GET', 'app_data?id=eq.knm_main&select=id&limit=1');
     if (statusEl) statusEl.innerHTML = '<span style="color:#4a9e6a">✅ เชื่อมต่อสำเร็จ! กำลังโหลดข้อมูล...</span>';
-    await loadFromSupabase();
+    loadFromSupabase(); // non-blocking
   } catch(e) {
     let hint = '';
     if (e.message.includes('401')) hint = '<br>🔑 <b>Key ไม่ถูกต้อง</b> — คัดลอก anon key ใหม่จาก Dashboard';
@@ -1815,11 +1822,16 @@ document.getElementById('t-date').value = today;
 document.getElementById('r-date').value = today;
 document.getElementById('f-month').value = today.substring(0,7);
 
-myLinks = JSON.parse(localStorage.getItem('ball_mylinks')||'[]');
+// myLinks already declared in DATA section — just render
 renderHomeStats();
 
-// Load cloud data (Supabase)
-loadFromSupabase();
+// Sync cloud in background AFTER app is ready — non-blocking
+if (SB_KEY) {
+  showSyncStatus('☁️ ...', '');
+  setTimeout(() => loadFromSupabase(), 500);
+} else {
+  showSyncStatus('🔑 ตั้ง key', 'error');
+}
 </script>
 </body>
 </html>
