@@ -1486,8 +1486,6 @@ function switchMangaTab(t) {
 }
 
 /* --- SITES (myLinks) --- */
-let myLinks = JSON.parse(localStorage.getItem('ball_mylinks')||'[]');
-
 function addMyLink() {
   const name = document.getElementById('ml-name').value.trim();
   const url  = document.getElementById('ml-url').value.trim();
