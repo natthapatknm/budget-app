@@ -1215,8 +1215,97 @@ function addReimbursement() {
 }
 function toggleRStatus(id) {
   const r = reimbursements.find(x=>x.id===id);
-  if (r) r.status = r.status==='pending'?'paid':'pending';
+  if (!r) return;
+  if (r.status === 'paid') {
+    // already fully paid — toggle back to pending
+    r.status = 'pending';
+    r.received = 0;
+    saveBudget(); renderReimbursement(); return;
+  }
+  // Show partial receive dialog
+  openReceiveModal(id);
+}
+
+function openReceiveModal(id) {
+  const r = reimbursements.find(x=>x.id===id);
+  if (!r) return;
+  const alreadyReceived = r.received || 0;
+  const remaining = r.amount - alreadyReceived;
+  let modal = document.getElementById('receive-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'receive-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `<div class="modal" style="max-width:360px">
+      <div class="modal-header">
+        <div class="modal-title" id="rm-title">รับเงินคืน</div>
+        <button class="btn sm" onclick="document.getElementById('receive-modal').classList.remove('open')">✕</button>
+      </div>
+      <div id="rm-info" style="margin-bottom:12px;font-size:13px;color:var(--text2)"></div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="number" id="rm-amount" placeholder="จำนวนที่รับมา (฿)" min="0" inputmode="decimal"
+          style="flex:1;padding:9px 11px;font-size:15px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text)">
+        <button class="btn primary" onclick="confirmReceive()">ยืนยัน</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn sm" onclick="confirmReceiveFull()" style="color:var(--green);border-color:var(--green-bg);flex:1">รับครบทั้งหมด ฿<span id='rm-full'></span></button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if(e.target===modal) modal.classList.remove('open'); });
+  }
+  modal._currentId = id;
+  document.getElementById('rm-title').textContent = 'รับเงินคืน — ' + r.person;
+  document.getElementById('rm-full').textContent = fmtFull(remaining);
+  document.getElementById('rm-amount').value = '';
+  document.getElementById('rm-amount').max = remaining;
+  const pct = Math.round(alreadyReceived / r.amount * 100);
+  document.getElementById('rm-info').innerHTML = `
+    <div style="margin-bottom:8px">
+      <span style="color:var(--text3)">ยอดทั้งหมด</span> 
+      <span style="font-weight:600;font-family:'IBM Plex Mono',monospace">฿${fmtFull(r.amount)}</span>
+    </div>
+    ${alreadyReceived > 0 ? `
+    <div style="margin-bottom:6px">
+      <span style="color:var(--green)">รับมาแล้ว ฿${fmtFull(alreadyReceived)}</span>
+      <span style="color:var(--text3)"> (${pct}%)</span>
+    </div>` : ''}
+    <div>
+      <span style="color:var(--red)">ยังค้างอยู่</span>
+      <span style="font-weight:600;color:var(--red);font-family:'IBM Plex Mono',monospace"> ฿${fmtFull(remaining)}</span>
+    </div>
+    <div style="margin-top:8px;background:var(--surface2);border-radius:4px;height:8px;overflow:hidden">
+      <div style="height:100%;width:${pct}%;background:var(--green);border-radius:4px;transition:width 0.3s"></div>
+    </div>`;
+  modal.classList.add('open');
+  setTimeout(() => document.getElementById('rm-amount').focus(), 100);
+}
+
+function confirmReceive() {
+  const modal = document.getElementById('receive-modal');
+  const id = modal._currentId;
+  const r = reimbursements.find(x=>x.id===id);
+  if (!r) return;
+  const amt = parseFloat(document.getElementById('rm-amount').value);
+  if (!amt || isNaN(amt) || amt <= 0) { alert('กรุณาใส่จำนวนเงินค่ะ'); return; }
+  const alreadyReceived = r.received || 0;
+  const remaining = r.amount - alreadyReceived;
+  if (amt > remaining) { alert('จำนวนมากกว่ายอดค้างค่ะ (ค้างอยู่ ฿' + fmtFull(remaining) + ')'); return; }
+  r.received = alreadyReceived + amt;
+  r.status = r.received >= r.amount ? 'paid' : 'partial';
   saveBudget(); renderReimbursement();
+  modal.classList.remove('open');
+}
+
+function confirmReceiveFull() {
+  const modal = document.getElementById('receive-modal');
+  const id = modal._currentId;
+  const r = reimbursements.find(x=>x.id===id);
+  if (!r) return;
+  r.received = r.amount;
+  r.status = 'paid';
+  saveBudget(); renderReimbursement();
+  modal.classList.remove('open');
 }
 function deleteReimbursement(id) {
   if (!confirm('ลบรายการนี้?')) return;
@@ -1228,7 +1317,10 @@ function renderReimbursement() {
   reimbursements.forEach(r => {
     if (!pt[r.person]) pt[r.person] = {total:0,pending:0,paid:0,count:0};
     pt[r.person].total += r.amount; pt[r.person].count++;
-    if (r.status==='pending') pt[r.person].pending+=r.amount; else pt[r.person].paid+=r.amount;
+    const received = r.received || (r.status==='paid' ? r.amount : 0);
+    const remaining = r.amount - received;
+    pt[r.person].pending += remaining;
+    pt[r.person].paid += received;
   });
   const names = Object.keys(pt);
   document.getElementById('person-summary').innerHTML = names.length
@@ -1248,8 +1340,31 @@ function renderReimbursement() {
       <td style="font-weight:600">${escHtml(r.person)}</td>
       <td>${escHtml(r.desc)}</td>
       <td style="color:var(--text3)">${r.note?escHtml(r.note):'-'}</td>
-      <td style="text-align:right"><span class="amount-neutral">฿${fmtFull(r.amount)}</span></td>
-      <td><button class="btn sm" onclick="toggleRStatus(${r.id})" style="${r.status==='paid'?'color:var(--green);border-color:var(--green)':'color:var(--amber);border-color:var(--amber)'}">${r.status==='paid'?'รับแล้ว':'รอรับ'}</button></td>
+      <td style="text-align:right">
+        ${(() => {
+          const recv = r.received || (r.status==='paid'?r.amount:0);
+          const pct = Math.round(recv/r.amount*100);
+          if (recv > 0 && recv < r.amount) {
+            return `<div style="font-family:'IBM Plex Mono',monospace;font-size:11px">
+              <span style="color:var(--green)">฿${fmtFull(recv)}</span>
+              <span style="color:var(--text3)"> / ฿${fmtFull(r.amount)}</span>
+              <div style="margin-top:3px;background:var(--surface2);border-radius:3px;height:4px;width:70px">
+                <div style="height:100%;width:${pct}%;background:var(--green);border-radius:3px"></div>
+              </div>
+            </div>`;
+          }
+          return `<span class="amount-neutral">฿${fmtFull(r.amount)}</span>`;
+        })()}
+      </td>
+      <td><button class="btn sm" onclick="toggleRStatus(${r.id})" style="${
+        r.status==='paid' ? 'color:var(--green);border-color:var(--green-bg)' :
+        r.status==='partial' ? 'color:var(--blue);border-color:var(--blue-bg)' :
+        'color:var(--amber);border-color:var(--amber-bg)'
+      }">${
+        r.status==='paid' ? 'รับครบแล้ว' :
+        r.status==='partial' ? 'รับบางส่วน' :
+        'รอรับ'
+      }</button></td>
       <td><button class="btn sm danger" onclick="deleteReimbursement(${r.id})">ลบ</button></td>
     </tr>`).join('') + '</tbody></table>';
 }
@@ -1258,8 +1373,8 @@ function renderReimbursement() {
 function openPersonModal(name) {
   const items = reimbursements.filter(r=>r.person===name);
   const total = items.reduce((s,r)=>s+r.amount,0);
-  const pending = items.filter(r=>r.status==='pending').reduce((s,r)=>s+r.amount,0);
-  const paid = items.filter(r=>r.status==='paid').reduce((s,r)=>s+r.amount,0);
+  const paid = items.reduce((s,r)=>s+(r.received||(r.status==='paid'?r.amount:0)),0);
+  const pending = total - paid;
   document.getElementById('modal-person-name').textContent = name;
   document.getElementById('modal-person-stats').innerHTML = `
     <div style="flex:1;min-width:90px;background:var(--red-bg);border-radius:var(--radius-xs);padding:8px 11px">
@@ -1280,7 +1395,7 @@ function openPersonModal(name) {
       <td>${escHtml(r.desc)}</td>
       <td style="color:var(--text3)">${r.note?escHtml(r.note):'-'}</td>
       <td style="text-align:right"><span class="amount-neutral">฿${fmtFull(r.amount)}</span></td>
-      <td><span class="badge ${r.status==='paid'?'paid':'pending'}">${r.status==='paid'?'รับแล้ว':'รอรับ'}</span></td>
+      <td><span class="badge ${r.status==='paid'?'paid':r.status==='partial'?'income':'pending'}">${r.status==='paid'?'รับครบแล้ว':r.status==='partial'?'รับบางส่วน':'รอรับ'}</span></td>
     </tr>`).join('') + '</tbody></table>';
   document.getElementById('person-modal').classList.add('open');
 }
