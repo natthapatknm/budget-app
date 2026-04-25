@@ -866,6 +866,48 @@ async function syncToSupabase() {
   } catch(e) { console.error('Sync error:', e.message); return false; }
 }
 
+/* ============================
+   DATA — global state
+   ============================ */
+let transactions   = JSON.parse(localStorage.getItem('ball_tx')    || '[]');
+let reimbursements = JSON.parse(localStorage.getItem('ball_re')    || '[]');
+let debts          = JSON.parse(localStorage.getItem('ball_debt')  || '[]');
+let todos          = JSON.parse(localStorage.getItem('ball_todo')  || '[]');
+let mangas         = JSON.parse(localStorage.getItem('ball_manga') || '[]');
+let myLinks        = JSON.parse(localStorage.getItem('ball_mylinks')|| '[]');
+let barChartInst = null, pieChartInst = null;
+let saveTimer = null, syncTimer = null;
+
+function saveAll() {
+  localStorage.setItem('ball_tx',      JSON.stringify(transactions));
+  localStorage.setItem('ball_re',      JSON.stringify(reimbursements));
+  localStorage.setItem('ball_debt',    JSON.stringify(debts));
+  localStorage.setItem('ball_todo',    JSON.stringify(todos));
+  localStorage.setItem('ball_manga',   JSON.stringify(mangas));
+  localStorage.setItem('ball_mylinks', JSON.stringify(myLinks));
+  if (SB_KEY) {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(async () => {
+      showSyncStatus('⏳ กำลังบันทึก...', '');
+      const ok = await syncToSupabase();
+      if (ok) showSyncStatus('☁️ ซิงก์แล้ว', 'synced');
+      else showSyncStatus('❌ sync ล้มเหลว', 'error');
+    }, 1500);
+  }
+}
+
+function saveBudget() {
+  localStorage.setItem('ball_tx',   JSON.stringify(transactions));
+  localStorage.setItem('ball_re',   JSON.stringify(reimbursements));
+  localStorage.setItem('ball_debt', JSON.stringify(debts));
+  saveAll();
+  const el = document.getElementById('budget-save-status');
+  if (el) { el.textContent = 'บันทึกแล้ว'; el.className = 'save-badge saved';
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { el.textContent = ''; el.className = 'save-badge'; }, 2000);
+  }
+}
+
 async function loadFromSupabase() {
   if (!SB_KEY) {
     showSyncStatus('🔑 ยังไม่ตั้ง key', 'error');
@@ -981,33 +1023,7 @@ function showSyncStatus(msg, cls) {
   el.className = 'sync-badge ' + (cls||'');
 }
 
-function saveAll() {
-  localStorage.setItem('ball_tx', JSON.stringify(transactions));
-  localStorage.setItem('ball_re', JSON.stringify(reimbursements));
-  localStorage.setItem('ball_debt', JSON.stringify(debts));
-  localStorage.setItem('ball_todo', JSON.stringify(todos));
-  localStorage.setItem('ball_manga', JSON.stringify(mangas));
-  // debounce cloud sync
-  if (SB_KEY) {
-    clearTimeout(syncTimer);
-    syncTimer = setTimeout(async () => {
-      showSyncStatus('⏳ กำลังบันทึก...', '');
-      const ok = await syncToSupabase();
-      if (ok) showSyncStatus('☁️ ซิงก์แล้ว', 'synced');
-      else showSyncStatus('❌ sync ล้มเหลว', 'error');
-    }, 1500);
-  }
-}
-function saveBudget() {
-  localStorage.setItem('ball_tx', JSON.stringify(transactions));
-  localStorage.setItem('ball_re', JSON.stringify(reimbursements));
-  localStorage.setItem('ball_debt', JSON.stringify(debts));
-  saveAll();
-  const el = document.getElementById('budget-save-status');
-  el.textContent = 'บันทึกแล้ว'; el.className = 'save-badge saved';
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => { el.textContent = ''; el.className = 'save-badge'; }, 2000);
-}
+
 
 function fmt(n) {
   const num = Number(n);
