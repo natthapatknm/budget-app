@@ -522,7 +522,7 @@ tr:hover td { background: var(--surface2); }
   <div class="home-content">
     <div class="home-topbar">
       <div class="sync-badge" id="sync-status" onclick="loadFromSupabase()" style="cursor:pointer" title="กดเพื่อ sync ใหม่">☁️ กำลังโหลด...</div>
-      <button onclick="showKeySetupBanner()" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px 4px;line-height:1" title="ตั้งค่า Supabase Key">⚙️</button>
+      <button onclick="showKeySetupBanner();if(SB_KEY)setTimeout(testAndLoad,200)" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px 4px;line-height:1" title="ตั้งค่า / ทดสอบ Supabase">⚙️</button>
     </div>
     <div class="home-header">
       <div class="home-logo-wrap">
@@ -813,71 +813,59 @@ tr:hover td { background: var(--surface2); }
 
 <script>
 /* ============================
-   SUPABASE CONFIG
+   SUPABASE CONFIG — XMLHttpRequest (works in all sandboxes)
    ============================ */
-const SB_URL = "https://vtgjxaegdnmmmdxdlgav.supabase.co/rest/v1";
-// anon key จาก Supabase Dashboard > Settings > API > anon public
+const SB_PROJECT_URL = "https://vtgjxaegdnmmmdxdlgav.supabase.co";
 let SB_KEY = localStorage.getItem('knm_sb_key') || "";
 
-// Supabase REST helper
-// NOTE: ต้องสร้าง table ใน Supabase ก่อน:
-// CREATE TABLE app_data (
-//   id text PRIMARY KEY,
-//   transactions text, reimbursements text, debts text,
-//   todos text, mangas text, mylinks text, updated_at timestamptz
-// );
-// ALTER TABLE app_data ENABLE ROW LEVEL SECURITY;
-// CREATE POLICY "allow all" ON app_data FOR ALL USING (true) WITH CHECK (true);
-async function sbFetch(table, method='GET', body=null, params='') {
-  const url = `${SB_URL}/${table}${params}`;
-  const headers = {
-    'apikey': SB_KEY,
-    'Authorization': `Bearer ${SB_KEY}`,
-    'Content-Type': 'application/json',
-    'Prefer': method==='POST' ? 'return=representation' : 'return=minimal'
-  };
-  const opts = { method, headers };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(url, opts);
-  if (!res.ok) {
-    const err = await res.text();
-    console.warn('Supabase error:', res.status, err);
-    return null;
-  }
-  if (method==='GET') return res.json();
+function initSupabase(key) {
+  SB_KEY = key;
+  localStorage.setItem('knm_sb_key', key);
   return true;
 }
 
-/* ============================
-   DATA — dual storage (localStorage + Supabase)
-   ============================ */
-let transactions = JSON.parse(localStorage.getItem('ball_tx') || '[]');
-let reimbursements = JSON.parse(localStorage.getItem('ball_re') || '[]');
-let debts = JSON.parse(localStorage.getItem('ball_debt') || '[]');
-let todos = JSON.parse(localStorage.getItem('ball_todo') || '[]');
-let mangas = JSON.parse(localStorage.getItem('ball_manga') || '[]');
-let barChartInst = null, pieChartInst = null;
-let saveTimer = null;
-let syncTimer = null;
-
-// ---- Sync: push all data to Supabase as single JSON blobs ----
-async function syncToSupabase() {
-  const payload = {
-    id: 'knm_main',
-    transactions: JSON.stringify(transactions),
-    reimbursements: JSON.stringify(reimbursements),
-    debts: JSON.stringify(debts),
-    todos: JSON.stringify(todos),
-    mangas: JSON.stringify(mangas),
-    mylinks: JSON.stringify(typeof myLinks !== 'undefined' ? myLinks : []),
-    updated_at: new Date().toISOString()
-  };
-  // upsert
-  const result = await sbFetch('app_data', 'POST', [payload], '?on_conflict=id');
-  return result !== null;
+// XHR-based request — avoids postMessage/Headers cloning issues
+function sbXhr(method, path, body) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, SB_PROJECT_URL + '/rest/v1/' + path, true);
+    xhr.setRequestHeader('apikey', SB_KEY);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + SB_KEY);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('Prefer', method === 'POST' ? 'resolution=merge-duplicates,return=minimal' : 'return=minimal');
+    xhr.timeout = 10000;
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { resolve(xhr.responseText ? JSON.parse(xhr.responseText) : {}); }
+        catch(e) { resolve({}); }
+      } else {
+        reject(new Error('HTTP ' + xhr.status + ': ' + xhr.responseText));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error'));
+    xhr.ontimeout = () => reject(new Error('Timeout'));
+    xhr.send(body ? JSON.stringify(body) : null);
+  });
 }
 
-// ---- Load from Supabase (on startup) ----
+async function syncToSupabase() {
+  if (!SB_KEY) return false;
+  try {
+    const payload = {
+      id: 'knm_main',
+      transactions: JSON.stringify(transactions),
+      reimbursements: JSON.stringify(reimbursements),
+      debts: JSON.stringify(debts),
+      todos: JSON.stringify(todos),
+      mangas: JSON.stringify(mangas),
+      mylinks: JSON.stringify(typeof myLinks !== 'undefined' ? myLinks : []),
+      updated_at: new Date().toISOString()
+    };
+    await sbXhr('POST', 'app_data', payload);
+    return true;
+  } catch(e) { console.error('Sync error:', e.message); return false; }
+}
+
 async function loadFromSupabase() {
   if (!SB_KEY) {
     showSyncStatus('🔑 ยังไม่ตั้ง key', 'error');
@@ -886,13 +874,8 @@ async function loadFromSupabase() {
   }
   showSyncStatus('⏳ กำลังโหลด...', '');
   try {
-    const rows = await sbFetch('app_data', 'GET', null, '?id=eq.knm_main');
-    if (rows === null) {
-      showSyncStatus('❌ เชื่อมต่อไม่ได้', 'error');
-      showKeySetupBanner('key อาจไม่ถูกต้อง หรือ table ยังไม่ถูกสร้าง');
-      return;
-    }
-    if (rows.length > 0) {
+    const rows = await sbXhr('GET', 'app_data?id=eq.knm_main&select=*');
+    if (Array.isArray(rows) && rows.length > 0) {
       const r = rows[0];
       const tx = JSON.parse(r.transactions || '[]');
       const re = JSON.parse(r.reimbursements || '[]');
@@ -916,13 +899,13 @@ async function loadFromSupabase() {
       hideKeySetupBanner();
     } else {
       showSyncStatus('📤 อัปโหลดครั้งแรก...', '');
-      await syncToSupabase();
-      showSyncStatus('☁️ พร้อมใช้งาน', 'synced');
-      hideKeySetupBanner();
+      const ok = await syncToSupabase();
+      showSyncStatus(ok ? '☁️ พร้อมใช้งาน' : '❌ upload ล้มเหลว', ok ? 'synced' : 'error');
+      if (ok) hideKeySetupBanner();
     }
   } catch(e) {
-    showSyncStatus('❌ เกิดข้อผิดพลาด', 'error');
-    console.error(e);
+    showSyncStatus('❌ ' + e.message, 'error');
+    showKeySetupBanner(e.message);
   }
   renderHomeStats();
 }
@@ -937,13 +920,21 @@ function showKeySetupBanner(extraMsg='') {
   }
   banner.innerHTML = `
     <div style="max-width:500px;margin:0 auto">
-      <div style="font-size:12px;font-weight:600;color:#c9a84c;margin-bottom:6px">🔑 ตั้งค่า Supabase Anon Key</div>
-      <div style="font-size:11px;color:#9a9087;margin-bottom:8px">ไปที่ Supabase Dashboard → Settings → API → คัดลอก <b style="color:#f0ebe3">anon public</b> key (ขึ้นต้นด้วย eyJ...)${extraMsg ? '<br><span style="color:#e05c3a">'+extraMsg+'</span>' : ''}</div>
-      <div style="display:flex;gap:8px">
+      <div style="font-size:12px;font-weight:600;color:#c9a84c;margin-bottom:6px">🔑 Supabase Anon Key</div>
+      <div style="font-size:11px;color:#9a9087;margin-bottom:8px">
+        Dashboard → Settings → API → คัดลอก <b style="color:#f0ebe3">anon public</b> (ขึ้นต้น eyJ...)
+        ${extraMsg ? '<br><span style="color:#e05c3a">'+extraMsg+'</span>' : ''}
+        ${SB_KEY ? '<br><span style="color:#4a9e6a">✅ มี key อยู่แล้ว: ' + SB_KEY.substring(0,20) + '...</span>' : '<br><span style="color:#e05c3a">⚠️ ยังไม่มี key</span>'}
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
         <input id="sb-key-input" type="text" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           style="flex:1;padding:8px 10px;font-size:12px;background:#262320;border:1px solid #3a3530;border-radius:6px;color:#f0ebe3;font-family:'IBM Plex Mono',monospace">
-        <button onclick="saveAnonKey()" style="padding:8px 16px;background:#c9a84c;color:#0e0d0b;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">บันทึก</button>
-        <button onclick="hideKeySetupBanner()" style="padding:8px 12px;background:#262320;color:#9a9087;border:1px solid #3a3530;border-radius:6px;cursor:pointer;font-size:13px">ปิด</button>
+        <button onclick="saveAnonKey()" style="padding:8px 16px;background:#c9a84c;color:#0e0d0b;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">ทดสอบ + บันทึก</button>
+      </div>
+      <div id="sb-test-result" style="font-size:11px;font-family:'IBM Plex Mono',monospace;margin-bottom:6px;min-height:16px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="testAndLoad()" style="padding:6px 12px;background:#262320;color:#c9a84c;border:1px solid #c9a84c;border-radius:6px;cursor:pointer;font-size:12px">🔄 ทดสอบอีกครั้ง</button>
+        <button onclick="hideKeySetupBanner()" style="padding:6px 12px;background:#262320;color:#9a9087;border:1px solid #3a3530;border-radius:6px;cursor:pointer;font-size:12px">ปิด</button>
       </div>
     </div>`;
   banner.style.display = 'block';
@@ -957,7 +948,30 @@ async function saveAnonKey() {
   if (!val || !val.startsWith('eyJ')) { alert('Key ไม่ถูกต้องค่ะ ต้องขึ้นต้นด้วย eyJ...'); return; }
   SB_KEY = val;
   localStorage.setItem('knm_sb_key', val);
-  await loadFromSupabase();
+  await testAndLoad();
+}
+
+async function testAndLoad() {
+  const statusEl = document.getElementById('sb-test-result');
+  if (statusEl) statusEl.innerHTML = '⏳ กำลังทดสอบ...';
+  showSyncStatus('⏳ ทดสอบ...', '');
+  if (!SB_KEY) {
+    if (statusEl) statusEl.innerHTML = '<span style="color:#e05c3a">❌ ยังไม่มี key</span>';
+    return;
+  }
+  try {
+    await sbXhr('GET', 'app_data?id=eq.knm_main&select=id&limit=1');
+    if (statusEl) statusEl.innerHTML = '<span style="color:#4a9e6a">✅ เชื่อมต่อสำเร็จ! กำลังโหลดข้อมูล...</span>';
+    await loadFromSupabase();
+  } catch(e) {
+    let hint = '';
+    if (e.message.includes('401')) hint = '<br>🔑 <b>Key ไม่ถูกต้อง</b> — คัดลอก anon key ใหม่จาก Dashboard';
+    else if (e.message.includes('404') || e.message.includes('42P01')) hint = '<br>📋 <b>ไม่มี table</b> — รัน SQL สร้าง table ก่อน';
+    else if (e.message.includes('403') || e.message.includes('PGRST')) hint = '<br>🔒 <b>RLS บล็อก</b> — ตรวจสอบ Policy ใน Supabase';
+    else if (e.message.includes('Network') || e.message.includes('Timeout')) hint = '<br>🌐 <b>Network error</b> — เปิดไฟล์ใน browser โดยตรง (ไม่ใช่ใน Claude)';
+    if (statusEl) statusEl.innerHTML = `<span style="color:#e05c3a">❌ ${e.message}</span>${hint}`;
+    showSyncStatus('❌ error', 'error');
+  }
 }
 
 function showSyncStatus(msg, cls) {
