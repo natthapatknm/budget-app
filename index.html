@@ -521,8 +521,8 @@ tr:hover td { background: var(--surface2); }
   <div class="home-grid-bg"></div>
   <div class="home-content">
     <div class="home-topbar">
-      <div class="sync-badge" id="sync-status" onclick="loadFromSupabase()" style="cursor:pointer" title="กดเพื่อ sync ใหม่">☁️ กำลังโหลด...</div>
-      <button onclick="showKeySetupBanner();if(SB_KEY)setTimeout(testAndLoad,200)" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px 4px;line-height:1" title="ตั้งค่า / ทดสอบ Supabase">⚙️</button>
+      <button onclick="manualSync()" id="sync-status" class="sync-badge" style="cursor:pointer;border:none" title="กดเพื่อ sync">☁️ กด sync</button>
+      <button onclick="showKeySetupBanner()" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px 4px;line-height:1" title="ตั้งค่า Supabase">⚙️</button>
     </div>
     <div class="home-header">
       <div class="home-logo-wrap">
@@ -825,23 +825,13 @@ let barChartInst = null, pieChartInst = null;
 let saveTimer = null, syncTimer = null;
 
 function saveAll() {
-  // Save locally FIRST — instant, never blocks
+  // Local only — instant, no network
   localStorage.setItem('ball_tx',      JSON.stringify(transactions));
   localStorage.setItem('ball_re',      JSON.stringify(reimbursements));
   localStorage.setItem('ball_debt',    JSON.stringify(debts));
   localStorage.setItem('ball_todo',    JSON.stringify(todos));
   localStorage.setItem('ball_manga',   JSON.stringify(mangas));
   localStorage.setItem('ball_mylinks', JSON.stringify(myLinks));
-  // Then background-sync to cloud (debounced, non-blocking)
-  if (SB_KEY) {
-    clearTimeout(syncTimer);
-    syncTimer = setTimeout(() => {
-      showSyncStatus('⏳ ...', '');
-      syncToSupabase().then(ok => {
-        showSyncStatus(ok ? '☁️ ซิงก์แล้ว' : '❌ sync ล้มเหลว', ok ? 'synced' : 'error');
-      }).catch(() => showSyncStatus('❌ sync ล้มเหลว', 'error'));
-    }, 2000);
-  }
 }
 
 function saveBudget() {
@@ -1023,6 +1013,41 @@ async function testAndLoad() {
     if (statusEl) statusEl.innerHTML = `<span style="color:#e05c3a">❌ ${e.message}</span>${hint}`;
     showSyncStatus('❌ error', 'error');
   }
+}
+
+function manualSync() {
+  if (!SB_KEY) { showKeySetupBanner(); return; }
+  showSyncStatus('⏳ กำลัง sync...', '');
+  // Truly fire-and-forget using timeout so UI updates first
+  setTimeout(async () => {
+    try {
+      // Push local data up first
+      const pushOk = await syncToSupabase();
+      if (!pushOk) { showSyncStatus('❌ push ล้มเหลว', 'error'); return; }
+      // Then pull cloud data
+      const rows = await sbXhr('GET', 'app_data?id=eq.knm_main&select=*');
+      if (Array.isArray(rows) && rows.length > 0) {
+        const r = rows[0];
+        const tx = JSON.parse(r.transactions || '[]');
+        const re = JSON.parse(r.reimbursements || '[]');
+        const db = JSON.parse(r.debts || '[]');
+        const td = JSON.parse(r.todos || '[]');
+        const mg = JSON.parse(r.mangas || '[]');
+        const ml = JSON.parse(r.mylinks || '[]');
+        if (tx.length > transactions.length) { transactions = tx; localStorage.setItem('ball_tx', JSON.stringify(tx)); }
+        if (re.length > reimbursements.length) { reimbursements = re; localStorage.setItem('ball_re', JSON.stringify(re)); }
+        if (db.length > debts.length) { debts = db; localStorage.setItem('ball_debt', JSON.stringify(db)); }
+        if (td.length > todos.length) { todos = td; localStorage.setItem('ball_todo', JSON.stringify(td)); }
+        if (mg.length > mangas.length) { mangas = mg; localStorage.setItem('ball_manga', JSON.stringify(mg)); }
+        if (ml.length > myLinks.length) { myLinks = ml; localStorage.setItem('ball_mylinks', JSON.stringify(ml)); }
+        renderHomeStats();
+      }
+      showSyncStatus('✅ sync แล้ว!', 'synced');
+      setTimeout(() => showSyncStatus('☁️ กด sync', 'synced'), 3000);
+    } catch(e) {
+      showSyncStatus('❌ ' + e.message.substring(0,20), 'error');
+    }
+  }, 50);
 }
 
 function showSyncStatus(msg, cls) {
@@ -1825,13 +1850,8 @@ document.getElementById('f-month').value = today.substring(0,7);
 // myLinks already declared in DATA section — just render
 renderHomeStats();
 
-// Sync cloud in background AFTER app is ready — non-blocking
-if (SB_KEY) {
-  showSyncStatus('☁️ ...', '');
-  setTimeout(() => loadFromSupabase(), 500);
-} else {
-  showSyncStatus('🔑 ตั้ง key', 'error');
-}
+// App ready — no blocking network calls on startup
+showSyncStatus(SB_KEY ? '☁️ กด sync' : '🔑 ตั้ง key', SB_KEY ? 'synced' : 'error');
 </script>
 </body>
 </html>
