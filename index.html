@@ -376,6 +376,19 @@ td { padding: 8px 8px; border-bottom: 1px solid var(--border); color: var(--text
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--surface2); }
 
+/* MOOD BUTTONS */
+.mood-btn {
+  background: var(--surface2);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: all 0.15s;
+}
+.mood-btn:hover { opacity: 1; }
+
 /* BADGE */
 .badge { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 500; font-family: 'IBM Plex Mono', monospace; }
 .badge.income { background: var(--green-bg); color: var(--green); }
@@ -538,30 +551,81 @@ tr:hover td { background: var(--surface2); }
       <div class="qs"><div class="qs-label">มังงะ</div><div class="qs-val" id="qs-manga">0</div></div>
     </div>
 
-    <div class="app-grid">
+    <!-- Section: จัดการ -->
+    <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;letter-spacing:0.1em;margin-bottom:8px;max-width:500px;width:100%;margin-left:auto;margin-right:auto">💼 จัดการ</div>
+    <div class="app-grid" style="max-width:500px;margin:0 auto 16px">
       <div class="app-card budget" onclick="goTo('budget')">
         <div class="app-card-arrow">→</div>
         <div class="app-card-icon">💰</div>
-        <div>
-          <div class="app-card-name">บัญชี</div>
-          <div class="app-card-desc">รายรับ รายจ่าย สำรองจ่าย หนี้สิน</div>
-        </div>
+        <div><div class="app-card-name">บัญชี</div><div class="app-card-desc">รายรับ รายจ่าย หนี้สิน</div></div>
       </div>
       <div class="app-card todo" onclick="goTo('todo')">
         <div class="app-card-arrow">→</div>
         <div class="app-card-icon">✅</div>
-        <div>
-          <div class="app-card-name">To-Do</div>
-          <div class="app-card-desc">รายการสิ่งที่ต้องทำ จัดหมวดหมู่ได้</div>
-        </div>
+        <div><div class="app-card-name">To-Do</div><div class="app-card-desc">สิ่งที่ต้องทำ</div></div>
       </div>
-      <div class="app-card manga wide" onclick="goTo('manga')">
+      <div class="app-card" onclick="goTo('calendar')" style="cursor:pointer">
+        <div class="app-card-arrow">→</div>
+        <div class="app-card-icon">📅</div>
+        <div><div class="app-card-name">นัดหมาย</div><div class="app-card-desc">ตารางนัดหมาย</div></div>
+      </div>
+      <div class="app-card" onclick="goTo('saving')" style="cursor:pointer">
+        <div class="app-card-arrow">→</div>
+        <div class="app-card-icon">🎯</div>
+        <div><div class="app-card-name">เป้าหมายออม</div><div class="app-card-desc">ติดตามการออมเงิน</div></div>
+      </div>
+    </div>
+    <!-- Section: ชีวิต -->
+    <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;letter-spacing:0.1em;margin-bottom:8px;max-width:500px;width:100%;margin-left:auto;margin-right:auto">🌱 ชีวิต</div>
+    <div class="app-grid" style="max-width:500px;margin:0 auto 16px">
+      <div class="app-card" onclick="goTo('habit')" style="cursor:pointer">
+        <div class="app-card-arrow">→</div>
+        <div class="app-card-icon">🔥</div>
+        <div><div class="app-card-name">Habit</div><div class="app-card-desc">Tracker streak</div></div>
+      </div>
+      <div class="app-card" onclick="goTo('journal')" style="cursor:pointer">
+        <div class="app-card-arrow">→</div>
+        <div class="app-card-icon">📓</div>
+        <div><div class="app-card-name">Journal</div><div class="app-card-desc">ไดอารี่ประจำวัน</div></div>
+      </div>
+      <div class="app-card" onclick="goTo('goals')" style="cursor:pointer">
+        <div class="app-card-arrow">→</div>
+        <div class="app-card-icon">🌟</div>
+        <div><div class="app-card-name">เป้าหมายชีวิต</div><div class="app-card-desc">ระยะสั้น-กลาง-ยาว</div></div>
+      </div>
+      <div class="app-card" onclick="goTo('health')" style="cursor:pointer">
+        <div class="app-card-arrow">→</div>
+        <div class="app-card-icon">💊</div>
+        <div><div class="app-card-name">สุขภาพ</div><div class="app-card-desc">ร่างกาย ยา ออกกำลังกาย</div></div>
+      </div>
+    </div>
+    <!-- Section: เครื่องมือ -->
+    <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;letter-spacing:0.1em;margin-bottom:8px;max-width:500px;width:100%;margin-left:auto;margin-right:auto">🔧 เครื่องมือ</div>
+    <div class="app-grid" style="max-width:500px;margin:0 auto 20px">
+      <div class="app-card manga" onclick="goTo('manga')" style="cursor:pointer">
         <div class="app-card-arrow">→</div>
         <div class="app-card-icon">📚</div>
-        <div class="app-card-content">
-          <div class="app-card-name">Web Manga</div>
-          <div class="app-card-desc">ลิงก์เว็บอ่านมังงะ บันทึกรายการที่กำลังอ่าน</div>
-        </div>
+        <div><div class="app-card-name">Manga</div><div class="app-card-desc">เว็บมังงะ อ่านอะไรอยู่</div></div>
+      </div>
+      <div class="app-card" onclick="goTo('grocery')" style="cursor:pointer">
+        <div class="app-card-arrow">→</div>
+        <div class="app-card-icon">🛒</div>
+        <div><div class="app-card-name">ของที่ต้องซื้อ</div><div class="app-card-desc">Grocery list</div></div>
+      </div>
+      <div class="app-card" onclick="goTo('notes')" style="cursor:pointer">
+        <div class="app-card-arrow">→</div>
+        <div class="app-card-icon">📝</div>
+        <div><div class="app-card-name">โน้ต</div><div class="app-card-desc">จดบันทึกด่วน</div></div>
+      </div>
+      <div class="app-card" onclick="goTo('pomodoro')" style="cursor:pointer">
+        <div class="app-card-arrow">→</div>
+        <div class="app-card-icon">⏱️</div>
+        <div><div class="app-card-name">Pomodoro</div><div class="app-card-desc">จับเวลาโฟกัส</div></div>
+      </div>
+      <div class="app-card" onclick="goTo('password')" style="cursor:pointer">
+        <div class="app-card-arrow">→</div>
+        <div class="app-card-icon">🔐</div>
+        <div><div class="app-card-name">รหัสสำคัญ</div><div class="app-card-desc">PIN, WiFi, รหัสต่างๆ</div></div>
       </div>
     </div>
   </div>
@@ -798,6 +862,390 @@ tr:hover td { background: var(--surface2); }
 
   </div>
 </div>
+
+<!-- ===== CALENDAR PAGE ===== -->
+<div id="page-calendar" class="page">
+  <div class="app-header">
+    <button class="back-btn" onclick="goHome()">← กลับ</button>
+    <div class="app-header-title">📅 นัดหมาย</div>
+    <div style="margin-left:auto;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace" id="cal-count"></div>
+  </div>
+  <div class="scroll-content">
+    <div class="card">
+      <div class="card-title">เพิ่มนัดหมาย</div>
+      <input type="text" id="cal-title" placeholder="ชื่อนัดหมาย" style="margin-bottom:7px">
+      <div class="form-grid form-3">
+        <input type="date" id="cal-date">
+        <input type="time" id="cal-time" placeholder="เวลา">
+        <select id="cal-cat">
+          <option value="ทั่วไป">ทั่วไป</option>
+          <option value="หมอ">หมอ</option>
+          <option value="งาน">งาน</option>
+          <option value="ส่วนตัว">ส่วนตัว</option>
+          <option value="สำคัญ">สำคัญ</option>
+        </select>
+      </div>
+      <input type="text" id="cal-note" placeholder="หมายเหตุ" style="margin-top:7px">
+      <div class="btn-row"><button class="btn primary" onclick="addCalEvent()">+ เพิ่มนัดหมาย</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">นัดหมายที่กำลังมาถึง</div>
+      <div id="cal-upcoming"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">นัดหมายทั้งหมด</div>
+      <div id="cal-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HEALTH PAGE ===== -->
+<div id="page-health" class="page">
+  <div class="app-header">
+    <button class="back-btn" onclick="goHome()">← กลับ</button>
+    <div class="app-header-title">💊 สุขภาพ</div>
+  </div>
+  <nav class="inner-nav">
+    <button class="nav-btn active" onclick="switchHealthTab('body')">📊 ร่างกาย</button>
+    <button class="nav-btn" onclick="switchHealthTab('meds')">💊 ยา</button>
+    <button class="nav-btn" onclick="switchHealthTab('exercise')">🏃 ออกกำลังกาย</button>
+  </nav>
+  <div class="scroll-content">
+    <div id="htab-body" class="inner-section active">
+      <div class="card">
+        <div class="card-title">บันทึกวันนี้</div>
+        <div class="form-grid form-2">
+          <input type="number" id="h-weight" placeholder="น้ำหนัก (กก.)" inputmode="decimal">
+          <input type="number" id="h-water" placeholder="น้ำที่ดื่ม (แก้ว)" inputmode="numeric">
+        </div>
+        <div class="form-grid form-2">
+          <input type="number" id="h-sleep" placeholder="นอนกี่ชั่วโมง" inputmode="decimal">
+          <input type="date" id="h-date">
+        </div>
+        <div class="btn-row"><button class="btn primary" onclick="addHealthLog()">+ บันทึก</button></div>
+      </div>
+      <div class="card"><div class="card-title">ประวัติ 7 วัน</div><div id="health-log"></div></div>
+    </div>
+    <div id="htab-meds" class="inner-section">
+      <div class="card">
+        <div class="card-title">เพิ่มยา</div>
+        <div class="form-grid form-2">
+          <input type="text" id="med-name" placeholder="ชื่อยา">
+          <input type="text" id="med-dose" placeholder="ขนาด/วิธีกิน">
+        </div>
+        <div class="form-grid form-2">
+          <input type="text" id="med-time" placeholder="เวลาที่กิน เช่น เช้า-เย็น">
+          <input type="date" id="med-until" placeholder="กินถึงวันที่">
+        </div>
+        <div class="btn-row"><button class="btn primary" onclick="addMed()">+ เพิ่มยา</button></div>
+      </div>
+      <div class="card"><div class="card-title">ยาที่ต้องกิน</div><div id="meds-list"></div></div>
+    </div>
+    <div id="htab-exercise" class="inner-section">
+      <div class="card">
+        <div class="card-title">บันทึกออกกำลังกาย</div>
+        <div class="form-grid form-2">
+          <input type="text" id="ex-type" placeholder="ประเภท เช่น วิ่ง, ว่ายน้ำ">
+          <input type="number" id="ex-min" placeholder="นาที" inputmode="numeric">
+        </div>
+        <div class="form-grid form-2">
+          <input type="number" id="ex-cal" placeholder="แคลอรี่ (ถ้ารู้)" inputmode="numeric">
+          <input type="date" id="ex-date">
+        </div>
+        <div class="btn-row"><button class="btn primary" onclick="addExercise()">+ บันทึก</button></div>
+      </div>
+      <div class="card"><div class="card-title">ประวัติออกกำลังกาย</div><div id="exercise-list"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GROCERY PAGE ===== -->
+<div id="page-grocery" class="page">
+  <div class="app-header">
+    <button class="back-btn" onclick="goHome()">← กลับ</button>
+    <div class="app-header-title">🛒 ของที่ต้องซื้อ</div>
+    <div style="margin-left:auto;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace" id="grocery-count"></div>
+  </div>
+  <div class="scroll-content">
+    <div class="card">
+      <div style="display:flex;gap:8px">
+        <input type="text" id="gr-item" placeholder="ของที่ต้องซื้อ..." style="flex:1" onkeydown="if(event.key==='Enter')addGrocery()">
+        <select id="gr-cat" style="width:auto;min-width:90px">
+          <option value="อาหาร">อาหาร</option>
+          <option value="ของใช้">ของใช้</option>
+          <option value="ยา">ยา</option>
+          <option value="อื่นๆ">อื่นๆ</option>
+        </select>
+        <button class="btn primary" onclick="addGrocery()">+</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="card-title" style="margin-bottom:0">รายการ</div>
+        <button class="btn sm danger" onclick="clearDoneGrocery()">ลบที่ซื้อแล้ว</button>
+      </div>
+      <div id="grocery-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NOTES PAGE ===== -->
+<div id="page-notes" class="page">
+  <div class="app-header">
+    <button class="back-btn" onclick="goHome()">← กลับ</button>
+    <div class="app-header-title">📝 โน้ต</div>
+    <button class="btn sm primary" onclick="addNote()" style="margin-left:auto">+ โน้ตใหม่</button>
+  </div>
+  <div class="scroll-content">
+    <div id="notes-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px"></div>
+  </div>
+</div>
+
+<!-- NOTE EDIT MODAL -->
+<div class="modal-overlay" id="note-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <input type="text" id="note-edit-title" placeholder="หัวข้อโน้ต" style="flex:1;border:none;background:transparent;font-size:15px;font-weight:600;color:var(--text);padding:0">
+      <button class="btn sm danger" id="note-delete-btn">ลบ</button>
+      <button class="btn sm primary" onclick="saveNote()">บันทึก</button>
+    </div>
+    <textarea id="note-edit-body" placeholder="เขียนอะไรก็ได้..." rows="10"
+      style="width:100%;border:none;background:transparent;color:var(--text);font-family:'Sarabun',sans-serif;font-size:14px;line-height:1.7;resize:none;margin-top:8px"></textarea>
+  </div>
+</div>
+
+<!-- ===== PASSWORD PAGE ===== -->
+<div id="page-password" class="page">
+  <div class="app-header">
+    <button class="back-btn" onclick="goHome()">← กลับ</button>
+    <div class="app-header-title">🔐 รหัสสำคัญ</div>
+  </div>
+  <div class="scroll-content">
+    <div id="pw-lock-screen" class="card" style="text-align:center;padding:2rem">
+      <div style="font-size:40px;margin-bottom:1rem">🔒</div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:1rem">ใส่ PIN 4 หลักเพื่อเข้าถึง</div>
+      <input type="password" id="pw-pin-input" maxlength="4" inputmode="numeric" placeholder="••••"
+        style="text-align:center;font-size:24px;letter-spacing:8px;width:120px;padding:10px">
+      <div class="btn-row" style="justify-content:center;margin-top:12px">
+        <button class="btn primary" onclick="unlockPW()">ปลดล็อก</button>
+      </div>
+      <div id="pw-lock-msg" style="font-size:12px;color:var(--red);margin-top:8px"></div>
+    </div>
+    <div id="pw-content" style="display:none">
+      <div class="card">
+        <div class="card-title">เพิ่มรหัสใหม่</div>
+        <div class="form-grid form-2">
+          <input type="text" id="pw-label" placeholder="ชื่อ เช่น WiFi บ้าน, ATM">
+          <input type="text" id="pw-value" placeholder="รหัส / PIN">
+        </div>
+        <input type="text" id="pw-note" placeholder="หมายเหตุ" style="margin-top:7px">
+        <div class="btn-row"><button class="btn primary" onclick="addPassword()">+ เพิ่ม</button></div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div class="card-title" style="margin-bottom:0">รหัสทั้งหมด</div>
+          <button class="btn sm" onclick="lockPW()">🔒 ล็อก</button>
+        </div>
+        <div id="pw-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">ตั้ง PIN</div>
+        <div style="display:flex;gap:8px">
+          <input type="password" id="pw-new-pin" maxlength="4" inputmode="numeric" placeholder="PIN ใหม่ 4 หลัก" style="flex:1;letter-spacing:4px;text-align:center">
+          <button class="btn primary" onclick="setNewPIN()">ตั้ง PIN</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px">⚠️ ถ้าลืม PIN ต้องล้างข้อมูลใหม่ค่ะ</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== POMODORO PAGE ===== -->
+<div id="page-pomodoro" class="page">
+  <div class="app-header">
+    <button class="back-btn" onclick="goHome()">← กลับ</button>
+    <div class="app-header-title">⏱️ Pomodoro</div>
+  </div>
+  <div class="scroll-content" style="display:flex;flex-direction:column;align-items:center;padding-top:2rem">
+    <div class="card" style="width:100%;max-width:340px;text-align:center">
+      <div id="pomo-mode-label" style="font-size:12px;color:var(--gold);font-family:'IBM Plex Mono',monospace;letter-spacing:0.1em;margin-bottom:1rem">โฟกัส</div>
+      <div id="pomo-timer" style="font-size:72px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--text);line-height:1;margin-bottom:1.5rem">25:00</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:1.5rem">
+        <button class="btn primary" id="pomo-btn" onclick="togglePomodoro()" style="padding:10px 28px;font-size:15px">▶ เริ่ม</button>
+        <button class="btn" onclick="resetPomodoro()">↺ รีเซ็ต</button>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button class="btn sm" onclick="setPomoMode('focus')" id="pomo-focus-btn" style="color:var(--gold);border-color:var(--gold)">โฟกัส 25'</button>
+        <button class="btn sm" onclick="setPomoMode('short')">พักสั้น 5'</button>
+        <button class="btn sm" onclick="setPomoMode('long')">พักยาว 15'</button>
+      </div>
+    </div>
+    <div class="card" style="width:100%;max-width:340px;margin-top:1rem">
+      <div class="card-title">วันนี้</div>
+      <div id="pomo-stats" style="display:flex;gap:10px">
+        <div style="flex:1;background:var(--surface2);border-radius:var(--radius-xs);padding:10px;text-align:center">
+          <div style="font-size:24px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--gold)" id="pomo-count">0</div>
+          <div style="font-size:10px;color:var(--text3)">รอบที่ทำ</div>
+        </div>
+        <div style="flex:1;background:var(--surface2);border-radius:var(--radius-xs);padding:10px;text-align:center">
+          <div style="font-size:24px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--green)" id="pomo-min">0</div>
+          <div style="font-size:10px;color:var(--text3)">นาทีโฟกัส</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SAVING GOAL PAGE ===== -->
+<div id="page-saving" class="page">
+  <div class="app-header">
+    <button class="back-btn" onclick="goHome()">← กลับ</button>
+    <div class="app-header-title">🎯 เป้าหมายการออม</div>
+  </div>
+  <div class="scroll-content">
+    <div class="card">
+      <div class="card-title">เพิ่มเป้าหมาย</div>
+      <div class="form-grid form-2">
+        <input type="text" id="sv-name" placeholder="เป้าหมาย เช่น iPhone, ท่องเที่ยว">
+        <input type="number" id="sv-target" placeholder="ยอดเงินที่ต้องการ (฿)" inputmode="decimal">
+      </div>
+      <div class="form-grid form-2">
+        <input type="number" id="sv-current" placeholder="มีอยู่แล้ว (฿)" inputmode="decimal">
+        <input type="date" id="sv-deadline" placeholder="ต้องการภายใน">
+      </div>
+      <div class="btn-row"><button class="btn primary" onclick="addSavingGoal()">+ เพิ่มเป้าหมาย</button></div>
+    </div>
+    <div id="saving-list"></div>
+  </div>
+</div>
+
+<!-- ===== HABIT PAGE ===== -->
+<div id="page-habit" class="page">
+  <div class="app-header">
+    <button class="back-btn" onclick="goHome()">← กลับ</button>
+    <div class="app-header-title">🔥 Habit Tracker</div>
+  </div>
+  <div class="scroll-content">
+    <div class="card">
+      <div class="card-title">เพิ่ม Habit ใหม่</div>
+      <div class="form-grid form-2">
+        <input type="text" id="hb-name" placeholder="เช่น ออกกำลังกาย, อ่านหนังสือ">
+        <select id="hb-freq">
+          <option value="daily">ทุกวัน</option>
+          <option value="weekday">วันธรรมดา</option>
+          <option value="weekend">วันหยุด</option>
+        </select>
+      </div>
+      <div class="form-grid form-2">
+        <input type="text" id="hb-icon" placeholder="Emoji เช่น 🏃 💪 📖" maxlength="4">
+        <input type="text" id="hb-goal" placeholder="เป้าหมาย เช่น 30 นาที">
+      </div>
+      <div class="btn-row"><button class="btn primary" onclick="addHabit()">+ เพิ่ม Habit</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Habits วันนี้</div>
+      <div id="habit-today"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Streak ทั้งหมด</div>
+      <div id="habit-streaks"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== JOURNAL PAGE ===== -->
+<div id="page-journal" class="page">
+  <div class="app-header">
+    <button class="back-btn" onclick="goHome()">← กลับ</button>
+    <div class="app-header-title">📓 Journal</div>
+    <button class="btn sm primary" onclick="newJournalEntry()" style="margin-left:auto">+ เขียนวันนี้</button>
+  </div>
+  <div class="scroll-content">
+    <div id="journal-list"></div>
+  </div>
+</div>
+
+<!-- JOURNAL EDIT MODAL -->
+<div class="modal-overlay" id="journal-modal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="jm-date-title"></div>
+        <div style="font-size:11px;color:var(--text3)" id="jm-mood-display"></div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn sm danger" id="jm-delete-btn">ลบ</button>
+        <button class="btn sm primary" onclick="saveJournalEntry()">บันทึก</button>
+        <button class="btn sm" onclick="document.getElementById('journal-modal').classList.remove('open')">✕</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <span style="font-size:11px;color:var(--text3);line-height:28px">ความรู้สึก:</span>
+      <div id="jm-moods" style="display:flex;gap:6px">
+        <button class="mood-btn" data-mood="😊" onclick="selectMood(this)">😊</button>
+        <button class="mood-btn" data-mood="😐" onclick="selectMood(this)">😐</button>
+        <button class="mood-btn" data-mood="😔" onclick="selectMood(this)">😔</button>
+        <button class="mood-btn" data-mood="😤" onclick="selectMood(this)">😤</button>
+        <button class="mood-btn" data-mood="🥳" onclick="selectMood(this)">🥳</button>
+        <button class="mood-btn" data-mood="😴" onclick="selectMood(this)">😴</button>
+      </div>
+    </div>
+    <textarea id="jm-body" rows="12" placeholder="วันนี้เป็นยังไงบ้าง?..."
+      style="width:100%;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Sarabun',sans-serif;font-size:14px;line-height:1.8;resize:none;border-radius:var(--radius-xs);padding:10px"></textarea>
+  </div>
+</div>
+
+<!-- ===== GOALS PAGE ===== -->
+<div id="page-goals" class="page">
+  <div class="app-header">
+    <button class="back-btn" onclick="goHome()">← กลับ</button>
+    <div class="app-header-title">🌟 เป้าหมายชีวิต</div>
+  </div>
+  <nav class="inner-nav">
+    <button class="nav-btn active" onclick="switchGoalsTab('short')">⚡ ระยะสั้น</button>
+    <button class="nav-btn" onclick="switchGoalsTab('mid')">🎯 ระยะกลาง</button>
+    <button class="nav-btn" onclick="switchGoalsTab('long')">🌟 ระยะยาว</button>
+  </nav>
+  <div class="scroll-content">
+    <div id="gtab-short" class="inner-section active">
+      <div class="card">
+        <div class="card-title">เพิ่มเป้าหมายระยะสั้น (ภายใน 3 เดือน)</div>
+        <input type="text" id="gl-short-title" placeholder="เป้าหมาย..." style="margin-bottom:7px">
+        <div class="form-grid form-2">
+          <input type="date" id="gl-short-due">
+          <input type="text" id="gl-short-note" placeholder="รายละเอียด">
+        </div>
+        <div class="btn-row"><button class="btn primary" onclick="addGoal('short')">+ เพิ่ม</button></div>
+      </div>
+      <div id="goals-short-list"></div>
+    </div>
+    <div id="gtab-mid" class="inner-section">
+      <div class="card">
+        <div class="card-title">เพิ่มเป้าหมายระยะกลาง (3 เดือน — 1 ปี)</div>
+        <input type="text" id="gl-mid-title" placeholder="เป้าหมาย..." style="margin-bottom:7px">
+        <div class="form-grid form-2">
+          <input type="date" id="gl-mid-due">
+          <input type="text" id="gl-mid-note" placeholder="รายละเอียด">
+        </div>
+        <div class="btn-row"><button class="btn primary" onclick="addGoal('mid')">+ เพิ่ม</button></div>
+      </div>
+      <div id="goals-mid-list"></div>
+    </div>
+    <div id="gtab-long" class="inner-section">
+      <div class="card">
+        <div class="card-title">เพิ่มเป้าหมายระยะยาว (1 ปีขึ้นไป)</div>
+        <input type="text" id="gl-long-title" placeholder="เป้าหมาย..." style="margin-bottom:7px">
+        <div class="form-grid form-2">
+          <input type="date" id="gl-long-due">
+          <input type="text" id="gl-long-note" placeholder="รายละเอียด">
+        </div>
+        <div class="btn-row"><button class="btn primary" onclick="addGoal('long')">+ เพิ่ม</button></div>
+      </div>
+      <div id="goals-long-list"></div>
+    </div>
+  </div>
+</div>
+
 
 <!-- PERSON MODAL -->
 <div class="modal-overlay" id="person-modal">
@@ -1090,6 +1538,16 @@ function goTo(app) {
   if (app === 'budget') { updateCatList(); updatePersonList(); renderBudgetDashboard(); renderTransactions(); }
   if (app === 'todo') renderTodo();
   if (app === 'manga') { populateSiteFilter(); renderRankView(); renderMangaReading(); }
+  if (app === 'calendar') renderCalendar();
+  if (app === 'health') { renderHealth(); renderMeds(); renderExercise(); }
+  if (app === 'grocery') renderGrocery();
+  if (app === 'notes') renderNotes();
+  if (app === 'password') { if(pwUnlocked) renderPasswords(); }
+  if (app === 'pomodoro') { document.getElementById('pomo-count').textContent=pomoDoneCount; document.getElementById('pomo-min').textContent=pomoFocusMin; }
+  if (app === 'saving') renderSaving();
+  if (app === 'habit') renderHabits();
+  if (app === 'journal') renderJournal();
+  if (app === 'goals') { renderGoals('short'); renderGoals('mid'); renderGoals('long'); }
 }
 function goHome() {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1946,6 +2404,624 @@ function renderMyLinksFull() {
   html += '</div></div>';
   el.innerHTML = html;
 }
+
+/* ============================
+   CALENDAR
+   ============================ */
+let calEvents = JSON.parse(localStorage.getItem('knm_cal')||'[]');
+
+function addCalEvent() {
+  const title = document.getElementById('cal-title').value.trim();
+  const date  = document.getElementById('cal-date').value;
+  const time  = document.getElementById('cal-time').value;
+  const cat   = document.getElementById('cal-cat').value;
+  const note  = document.getElementById('cal-note').value.trim();
+  if (!title||!date) { alert('กรุณากรอกชื่อและวันที่ค่ะ'); return; }
+  calEvents.push({ id:Date.now(), title, date, time, cat, note, done:false });
+  calEvents.sort((a,b)=>a.date.localeCompare(b.date));
+  localStorage.setItem('knm_cal', JSON.stringify(calEvents));
+  ['cal-title','cal-time','cal-note'].forEach(id=>document.getElementById(id).value='');
+  renderCalendar();
+}
+function deleteCalEvent(id) {
+  calEvents = calEvents.filter(e=>e.id!==id);
+  localStorage.setItem('knm_cal', JSON.stringify(calEvents));
+  renderCalendar();
+}
+function renderCalendar() {
+  const today = new Date().toISOString().split('T')[0];
+  const catColors = { ทั่วไป:'var(--text3)', หมอ:'var(--red)', งาน:'var(--blue)', ส่วนตัว:'var(--purple)', สำคัญ:'var(--gold)' };
+  const upcoming = calEvents.filter(e=>e.date>=today).slice(0,5);
+  const upEl = document.getElementById('cal-upcoming');
+  upEl.innerHTML = upcoming.length ? upcoming.map(e=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="flex-shrink:0;text-align:center;min-width:40px">
+        <div style="font-size:18px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${catColors[e.cat]||'var(--gold)'}">${e.date.split('-')[2]}</div>
+        <div style="font-size:9px;color:var(--text3)">${['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][parseInt(e.date.split('-')[1])-1]}</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${escHtml(e.title)}</div>
+        <div style="font-size:10px;color:var(--text3)">${e.time||''} ${e.cat} ${e.note?'· '+escHtml(e.note):''}</div>
+      </div>
+      <button class="btn sm danger" onclick="deleteCalEvent(${e.id})">ลบ</button>
+    </div>`).join('') : '<p class="empty">ไม่มีนัดหมายที่กำลังมาถึงค่ะ</p>';
+  const listEl = document.getElementById('cal-list');
+  listEl.innerHTML = calEvents.length ? calEvents.map(e=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--text3);min-width:72px">${fmtDate(e.date)}</span>
+      <span style="font-size:13px;flex:1">${escHtml(e.title)}</span>
+      <span style="font-size:10px;color:${catColors[e.cat]||'var(--text3)'}">${e.cat}</span>
+      <button class="btn sm danger" onclick="deleteCalEvent(${e.id})">ลบ</button>
+    </div>`).join('') : '<p class="empty">ยังไม่มีนัดหมายค่ะ</p>';
+  const c = document.getElementById('cal-count');
+  if (c) c.textContent = upcoming.length + ' นัดที่กำลังมา';
+}
+
+/* ============================
+   HEALTH
+   ============================ */
+let healthLogs  = JSON.parse(localStorage.getItem('knm_health')||'[]');
+let medsList    = JSON.parse(localStorage.getItem('knm_meds')||'[]');
+let exerciseLogs= JSON.parse(localStorage.getItem('knm_exercise')||'[]');
+
+function switchHealthTab(t) {
+  document.querySelectorAll('#page-health .nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#page-health .inner-section').forEach(s=>s.classList.remove('active'));
+  document.querySelector(`#page-health .nav-btn[onclick="switchHealthTab('${t}')"]`).classList.add('active');
+  document.getElementById('htab-'+t).classList.add('active');
+}
+function addHealthLog() {
+  const w=document.getElementById('h-weight').value;
+  const wa=document.getElementById('h-water').value;
+  const sl=document.getElementById('h-sleep').value;
+  const d=document.getElementById('h-date').value;
+  if (!d) { alert('เลือกวันที่ด้วยค่ะ'); return; }
+  healthLogs.unshift({ id:Date.now(), date:d, weight:parseFloat(w)||null, water:parseInt(wa)||null, sleep:parseFloat(sl)||null });
+  localStorage.setItem('knm_health', JSON.stringify(healthLogs));
+  ['h-weight','h-water','h-sleep'].forEach(id=>document.getElementById(id).value='');
+  renderHealth();
+}
+function addMed() {
+  const name=document.getElementById('med-name').value.trim();
+  const dose=document.getElementById('med-dose').value.trim();
+  const time=document.getElementById('med-time').value.trim();
+  const until=document.getElementById('med-until').value;
+  if (!name) { alert('กรอกชื่อยาด้วยค่ะ'); return; }
+  medsList.push({ id:Date.now(), name, dose, time, until, active:true });
+  localStorage.setItem('knm_meds', JSON.stringify(medsList));
+  ['med-name','med-dose','med-time','med-until'].forEach(id=>document.getElementById(id).value='');
+  renderMeds();
+}
+function deleteMed(id) {
+  medsList = medsList.filter(m=>m.id!==id);
+  localStorage.setItem('knm_meds', JSON.stringify(medsList));
+  renderMeds();
+}
+function addExercise() {
+  const type=document.getElementById('ex-type').value.trim();
+  const min=parseInt(document.getElementById('ex-min').value)||0;
+  const cal=parseInt(document.getElementById('ex-cal').value)||0;
+  const d=document.getElementById('ex-date').value;
+  if (!type||!d) { alert('กรอกประเภทและวันที่ด้วยค่ะ'); return; }
+  exerciseLogs.unshift({ id:Date.now(), type, min, cal, date:d });
+  localStorage.setItem('knm_exercise', JSON.stringify(exerciseLogs));
+  ['ex-type','ex-min','ex-cal'].forEach(id=>document.getElementById(id).value='');
+  renderExercise();
+}
+function deleteExercise(id) {
+  exerciseLogs=exerciseLogs.filter(e=>e.id!==id);
+  localStorage.setItem('knm_exercise',JSON.stringify(exerciseLogs));
+  renderExercise();
+}
+function renderHealth() {
+  const el=document.getElementById('health-log');
+  const last7=healthLogs.slice(0,7);
+  el.innerHTML = last7.length ? last7.map(h=>`
+    <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span style="color:var(--text3);min-width:72px;font-family:'IBM Plex Mono',monospace">${fmtDate(h.date)}</span>
+      ${h.weight?`<span>⚖️ ${h.weight}กก.</span>`:''}
+      ${h.water?`<span>💧 ${h.water}แก้ว</span>`:''}
+      ${h.sleep?`<span>😴 ${h.sleep}ชม.</span>`:''}
+      <button class="btn sm danger" onclick="deleteHealthLog(${h.id})" style="margin-left:auto">ลบ</button>
+    </div>`).join('') : '<p class="empty">ยังไม่มีข้อมูลค่ะ</p>';
+}
+function deleteHealthLog(id) {
+  healthLogs=healthLogs.filter(h=>h.id!==id);
+  localStorage.setItem('knm_health',JSON.stringify(healthLogs));
+  renderHealth();
+}
+function renderMeds() {
+  const el=document.getElementById('meds-list');
+  el.innerHTML = medsList.length ? medsList.map(m=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">💊 ${escHtml(m.name)}</div>
+        <div style="font-size:10px;color:var(--text3)">${m.dose?escHtml(m.dose):''} ${m.time?'· '+escHtml(m.time):''} ${m.until?'· ถึง '+fmtDate(m.until):''}</div>
+      </div>
+      <button class="btn sm danger" onclick="deleteMed(${m.id})">ลบ</button>
+    </div>`).join('') : '<p class="empty">ไม่มียาค่ะ</p>';
+}
+function renderExercise() {
+  const el=document.getElementById('exercise-list');
+  el.innerHTML = exerciseLogs.length ? exerciseLogs.slice(0,20).map(e=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span style="color:var(--text3);min-width:72px;font-family:'IBM Plex Mono',monospace">${fmtDate(e.date)}</span>
+      <span style="flex:1;font-weight:600">🏃 ${escHtml(e.type)}</span>
+      <span style="color:var(--blue)">${e.min}นาที</span>
+      ${e.cal?`<span style="color:var(--red)">${e.cal}kcal</span>`:''}
+      <button class="btn sm danger" onclick="deleteExercise(${e.id})">ลบ</button>
+    </div>`).join('') : '<p class="empty">ยังไม่มีข้อมูลค่ะ</p>';
+}
+
+/* ============================
+   GROCERY
+   ============================ */
+let groceries = JSON.parse(localStorage.getItem('knm_grocery')||'[]');
+const grCatColors = { อาหาร:'var(--green)', ของใช้:'var(--blue)', ยา:'var(--red)', อื่นๆ:'var(--text3)' };
+
+function addGrocery() {
+  const item=document.getElementById('gr-item').value.trim();
+  const cat=document.getElementById('gr-cat').value;
+  if (!item) return;
+  groceries.unshift({ id:Date.now(), item, cat, done:false });
+  localStorage.setItem('knm_grocery', JSON.stringify(groceries));
+  document.getElementById('gr-item').value='';
+  renderGrocery();
+}
+function toggleGrocery(id) {
+  const g=groceries.find(x=>x.id===id); if(g) g.done=!g.done;
+  localStorage.setItem('knm_grocery', JSON.stringify(groceries));
+  renderGrocery();
+}
+function clearDoneGrocery() {
+  groceries=groceries.filter(g=>!g.done);
+  localStorage.setItem('knm_grocery', JSON.stringify(groceries));
+  renderGrocery();
+}
+function renderGrocery() {
+  const el=document.getElementById('grocery-list');
+  const cnt=document.getElementById('grocery-count');
+  const pending=groceries.filter(g=>!g.done).length;
+  if(cnt) cnt.textContent=pending+' รายการ';
+  if(!groceries.length){ el.innerHTML='<p class="empty">ไม่มีของค่ะ</p>'; return; }
+  const cats=[...new Set(groceries.map(g=>g.cat))];
+  el.innerHTML = cats.map(cat=>{
+    const items=groceries.filter(g=>g.cat===cat);
+    return `<div style="margin-bottom:10px">
+      <div style="font-size:10px;color:${grCatColors[cat]||'var(--text3)'};font-family:'IBM Plex Mono',monospace;font-weight:600;margin-bottom:6px;text-transform:uppercase">${cat}</div>
+      ${items.map(g=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer;opacity:${g.done?0.4:1}" onclick="toggleGrocery(${g.id})">
+        <div style="width:18px;height:18px;border-radius:4px;border:2px solid ${g.done?'var(--green)':'var(--border2)'};background:${g.done?'var(--green)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          ${g.done?'<span style="color:#0e0d0b;font-size:10px">✓</span>':''}
+        </div>
+        <span style="flex:1;font-size:14px;${g.done?'text-decoration:line-through':''}">${escHtml(g.item)}</span>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+/* ============================
+   NOTES
+   ============================ */
+let notes = JSON.parse(localStorage.getItem('knm_notes')||'[]');
+let editingNoteId = null;
+const noteColors = ['#2a2520','#1a2a1a','#1a1a2a','#2a1a1a','#2a2a1a','#1a2a2a'];
+
+function addNote() {
+  const n={ id:Date.now(), title:'โน้ตใหม่', body:'', color:noteColors[notes.length%noteColors.length], updatedAt:new Date().toISOString() };
+  notes.unshift(n);
+  localStorage.setItem('knm_notes', JSON.stringify(notes));
+  openNoteModal(n.id);
+  renderNotes();
+}
+function openNoteModal(id) {
+  const n=notes.find(x=>x.id===id); if(!n) return;
+  editingNoteId=id;
+  document.getElementById('note-edit-title').value=n.title;
+  document.getElementById('note-edit-body').value=n.body;
+  document.getElementById('note-delete-btn').onclick=()=>deleteNote(id);
+  document.getElementById('note-modal').classList.add('open');
+}
+function saveNote() {
+  const n=notes.find(x=>x.id===editingNoteId); if(!n) return;
+  n.title=document.getElementById('note-edit-title').value||'ไม่มีหัวข้อ';
+  n.body=document.getElementById('note-edit-body').value;
+  n.updatedAt=new Date().toISOString();
+  localStorage.setItem('knm_notes', JSON.stringify(notes));
+  document.getElementById('note-modal').classList.remove('open');
+  renderNotes();
+}
+function deleteNote(id) {
+  if(!confirm('ลบโน้ตนี้?')) return;
+  notes=notes.filter(n=>n.id!==id);
+  localStorage.setItem('knm_notes', JSON.stringify(notes));
+  document.getElementById('note-modal').classList.remove('open');
+  renderNotes();
+}
+function renderNotes() {
+  const el=document.getElementById('notes-grid');
+  el.innerHTML = notes.length ? notes.map(n=>`
+    <div onclick="openNoteModal(${n.id})" style="background:${n.color};border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;cursor:pointer;min-height:120px;transition:all 0.15s">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text)">${escHtml(n.title)}</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical">${escHtml(n.body||'')}</div>
+      <div style="font-size:9px;color:var(--text3);margin-top:8px;font-family:'IBM Plex Mono',monospace">${new Date(n.updatedAt).toLocaleDateString('th-TH')}</div>
+    </div>`).join('') : '<p style="text-align:center;color:var(--text3);padding:2rem;font-size:13px">กด + เพื่อเพิ่มโน้ตแรกค่ะ</p>';
+}
+
+/* ============================
+   PASSWORD
+   ============================ */
+let passwords = JSON.parse(localStorage.getItem('knm_pw')||'[]');
+let pwUnlocked = false;
+
+function unlockPW() {
+  const pin=document.getElementById('pw-pin-input').value;
+  const savedPin=localStorage.getItem('knm_pw_pin')||'1234';
+  if (pin===savedPin) {
+    pwUnlocked=true;
+    document.getElementById('pw-lock-screen').style.display='none';
+    document.getElementById('pw-content').style.display='block';
+    renderPasswords();
+  } else {
+    document.getElementById('pw-lock-msg').textContent='PIN ไม่ถูกต้องค่ะ';
+    document.getElementById('pw-pin-input').value='';
+  }
+}
+function lockPW() {
+  pwUnlocked=false;
+  document.getElementById('pw-lock-screen').style.display='block';
+  document.getElementById('pw-content').style.display='none';
+  document.getElementById('pw-pin-input').value='';
+  document.getElementById('pw-lock-msg').textContent='';
+}
+function setNewPIN() {
+  const pin=document.getElementById('pw-new-pin').value;
+  if (!pin||pin.length!==4||isNaN(pin)) { alert('PIN ต้องเป็นตัวเลข 4 หลักค่ะ'); return; }
+  localStorage.setItem('knm_pw_pin', pin);
+  document.getElementById('pw-new-pin').value='';
+  alert('ตั้ง PIN สำเร็จค่ะ');
+}
+function addPassword() {
+  const label=document.getElementById('pw-label').value.trim();
+  const value=document.getElementById('pw-value').value.trim();
+  const note=document.getElementById('pw-note').value.trim();
+  if (!label||!value) { alert('กรอกชื่อและรหัสด้วยค่ะ'); return; }
+  passwords.unshift({ id:Date.now(), label, value, note });
+  localStorage.setItem('knm_pw', JSON.stringify(passwords));
+  ['pw-label','pw-value','pw-note'].forEach(id=>document.getElementById(id).value='');
+  renderPasswords();
+}
+function deletePassword(id) {
+  if(!confirm('ลบรหัสนี้?')) return;
+  passwords=passwords.filter(p=>p.id!==id);
+  localStorage.setItem('knm_pw', JSON.stringify(passwords));
+  renderPasswords();
+}
+function togglePWVisible(id, el) {
+  const span=el.previousElementSibling;
+  if (span.dataset.shown==='1') { span.textContent='••••••'; span.dataset.shown='0'; el.textContent='👁️'; }
+  else { const p=passwords.find(x=>x.id===id); span.textContent=p.value; span.dataset.shown='1'; el.textContent='🙈'; }
+}
+function renderPasswords() {
+  const el=document.getElementById('pw-list');
+  el.innerHTML = passwords.length ? passwords.map(p=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${escHtml(p.label)}</div>
+        ${p.note?`<div style="font-size:10px;color:var(--text3)">${escHtml(p.note)}</div>`:''}
+      </div>
+      <span data-shown="0" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--gold)">••••••</span>
+      <button onclick="togglePWVisible(${p.id},this)" style="background:none;border:none;cursor:pointer;font-size:14px">👁️</button>
+      <button class="btn sm danger" onclick="deletePassword(${p.id})">ลบ</button>
+    </div>`).join('') : '<p class="empty">ยังไม่มีรหัสค่ะ</p>';
+}
+
+/* ============================
+   POMODORO
+   ============================ */
+let pomoInterval=null, pomoSeconds=25*60, pomoMode='focus', pomoRunning=false;
+let pomoDoneCount=parseInt(localStorage.getItem('knm_pomo_count')||'0');
+let pomoFocusMin=parseInt(localStorage.getItem('knm_pomo_min')||'0');
+const pomoModes={ focus:{sec:25*60,label:'โฟกัส'}, short:{sec:5*60,label:'พักสั้น'}, long:{sec:15*60,label:'พักยาว'} };
+
+function setPomoMode(mode) {
+  pomoMode=mode; resetPomodoro();
+  document.querySelectorAll('[id^=pomo-]').forEach(b=>b.style&&(b.style.color=''));
+  document.getElementById('pomo-mode-label').textContent=pomoModes[mode].label;
+}
+function togglePomodoro() {
+  if (pomoRunning) {
+    clearInterval(pomoInterval); pomoRunning=false;
+    document.getElementById('pomo-btn').textContent='▶ เริ่ม';
+  } else {
+    pomoRunning=true;
+    document.getElementById('pomo-btn').textContent='⏸ หยุด';
+    pomoInterval=setInterval(()=>{
+      pomoSeconds--;
+      updatePomoDisplay();
+      if (pomoSeconds<=0) {
+        clearInterval(pomoInterval); pomoRunning=false;
+        document.getElementById('pomo-btn').textContent='▶ เริ่ม';
+        if (pomoMode==='focus') {
+          pomoDoneCount++; pomoFocusMin+=25;
+          localStorage.setItem('knm_pomo_count',pomoDoneCount);
+          localStorage.setItem('knm_pomo_min',pomoFocusMin);
+          document.getElementById('pomo-count').textContent=pomoDoneCount;
+          document.getElementById('pomo-min').textContent=pomoFocusMin;
+          alert('🎉 โฟกัสครบแล้ว! พักได้เลยค่ะ');
+        } else { alert('⏰ หมดเวลาพักแล้วค่ะ กลับมาโฟกัสกันต่อ!'); }
+        resetPomodoro();
+      }
+    },1000);
+  }
+}
+function resetPomodoro() {
+  clearInterval(pomoInterval); pomoRunning=false;
+  pomoSeconds=pomoModes[pomoMode].sec;
+  document.getElementById('pomo-btn').textContent='▶ เริ่ม';
+  updatePomoDisplay();
+}
+function updatePomoDisplay() {
+  const m=Math.floor(pomoSeconds/60), s=pomoSeconds%60;
+  document.getElementById('pomo-timer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+/* ============================
+   SAVING GOALS
+   ============================ */
+let savingGoals = JSON.parse(localStorage.getItem('knm_saving')||'[]');
+
+function addSavingGoal() {
+  const name=document.getElementById('sv-name').value.trim();
+  const target=parseFloat(document.getElementById('sv-target').value)||0;
+  const current=parseFloat(document.getElementById('sv-current').value)||0;
+  const deadline=document.getElementById('sv-deadline').value;
+  if (!name||!target) { alert('กรอกชื่อและยอดเงินที่ต้องการค่ะ'); return; }
+  savingGoals.push({ id:Date.now(), name, target, current, deadline });
+  localStorage.setItem('knm_saving', JSON.stringify(savingGoals));
+  ['sv-name','sv-target','sv-current','sv-deadline'].forEach(id=>document.getElementById(id).value='');
+  renderSaving();
+}
+function addToSaving(id) {
+  const g=savingGoals.find(x=>x.id===id); if(!g) return;
+  const amt=parseFloat(prompt(`เพิ่มเงินออมสำหรับ "${g.name}" เท่าไหร่?`))||0;
+  if (amt<=0) return;
+  g.current=Math.min(g.target, g.current+amt);
+  localStorage.setItem('knm_saving', JSON.stringify(savingGoals));
+  renderSaving();
+}
+function deleteSavingGoal(id) {
+  if(!confirm('ลบเป้าหมายนี้?')) return;
+  savingGoals=savingGoals.filter(g=>g.id!==id);
+  localStorage.setItem('knm_saving', JSON.stringify(savingGoals));
+  renderSaving();
+}
+function renderSaving() {
+  const el=document.getElementById('saving-list');
+  el.innerHTML = savingGoals.length ? savingGoals.map(g=>{
+    const pct=Math.round(g.current/g.target*100);
+    const remaining=g.target-g.current;
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-size:14px;font-weight:600">${escHtml(g.name)}</div>
+          ${g.deadline?`<div style="font-size:10px;color:var(--text3)">ถึงวันที่ ${fmtDate(g.deadline)}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--gold)">${pct}%</div>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border-radius:6px;height:12px;overflow:hidden;margin-bottom:8px">
+        <div style="height:100%;width:${pct}%;background:${pct>=100?'var(--green)':'var(--gold)'};border-radius:6px;transition:width 0.5s"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:10px">
+        <span>มีอยู่ <b style="color:var(--green);font-family:'IBM Plex Mono',monospace">฿${fmt(g.current)}</b></span>
+        <span>เป้า <b style="font-family:'IBM Plex Mono',monospace">฿${fmt(g.target)}</b></span>
+        ${remaining>0?`<span>ขาดอีก <b style="color:var(--red);font-family:'IBM Plex Mono',monospace">฿${fmt(remaining)}</b></span>`:'<span style="color:var(--green)">✅ ครบแล้ว!</span>'}
+      </div>
+      <div style="display:flex;gap:8px">
+        ${pct<100?`<button class="btn sm primary" onclick="addToSaving(${g.id})">+ เพิ่มเงินออม</button>`:''}
+        <button class="btn sm danger" onclick="deleteSavingGoal(${g.id})">ลบ</button>
+      </div>
+    </div>`;
+  }).join('') : '<p class="empty">ยังไม่มีเป้าหมายค่ะ</p>';
+}
+
+/* ============================
+   HABIT TRACKER
+   ============================ */
+let habits = JSON.parse(localStorage.getItem('knm_habits')||'[]');
+let habitLogs = JSON.parse(localStorage.getItem('knm_habit_logs')||'[]');
+
+function addHabit() {
+  const name=document.getElementById('hb-name').value.trim();
+  const icon=document.getElementById('hb-icon').value.trim()||'⭐';
+  const freq=document.getElementById('hb-freq').value;
+  const goal=document.getElementById('hb-goal').value.trim();
+  if (!name) { alert('กรอกชื่อ habit ด้วยค่ะ'); return; }
+  habits.push({ id:Date.now(), name, icon, freq, goal, createdAt:new Date().toISOString() });
+  localStorage.setItem('knm_habits', JSON.stringify(habits));
+  ['hb-name','hb-icon','hb-goal'].forEach(id=>document.getElementById(id).value='');
+  renderHabits();
+}
+function toggleHabitToday(id) {
+  const today=new Date().toISOString().split('T')[0];
+  const existing=habitLogs.find(l=>l.habitId===id&&l.date===today);
+  if (existing) habitLogs=habitLogs.filter(l=>!(l.habitId===id&&l.date===today));
+  else habitLogs.push({ habitId:id, date:today });
+  localStorage.setItem('knm_habit_logs', JSON.stringify(habitLogs));
+  renderHabits();
+}
+function deleteHabit(id) {
+  if(!confirm('ลบ habit นี้?')) return;
+  habits=habits.filter(h=>h.id!==id);
+  habitLogs=habitLogs.filter(l=>l.habitId!==id);
+  localStorage.setItem('knm_habits',JSON.stringify(habits));
+  localStorage.setItem('knm_habit_logs',JSON.stringify(habitLogs));
+  renderHabits();
+}
+function getStreak(id) {
+  let streak=0, d=new Date();
+  while(true) {
+    const dateStr=d.toISOString().split('T')[0];
+    if (habitLogs.find(l=>l.habitId===id&&l.date===dateStr)) { streak++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+function renderHabits() {
+  const today=new Date().toISOString().split('T')[0];
+  const todayEl=document.getElementById('habit-today');
+  const streakEl=document.getElementById('habit-streaks');
+  if (!habits.length) {
+    todayEl.innerHTML='<p class="empty">เพิ่ม habit แรกได้เลยค่ะ</p>';
+    streakEl.innerHTML='';
+    return;
+  }
+  todayEl.innerHTML = habits.map(h=>{
+    const done=!!habitLogs.find(l=>l.habitId===h.id&&l.date===today);
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;opacity:${done?0.6:1}" onclick="toggleHabitToday(${h.id})">
+      <div style="width:30px;height:30px;border-radius:50%;border:2px solid ${done?'var(--green)':'var(--border2)'};background:${done?'var(--green-bg)':'transparent'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">
+        ${done?'✓':h.icon}
+      </div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600;${done?'text-decoration:line-through;color:var(--text3)':''}">${escHtml(h.name)}</div>
+        ${h.goal?`<div style="font-size:10px;color:var(--text3)">${escHtml(h.goal)}</div>`:''}
+      </div>
+      <div style="font-size:11px;color:${done?'var(--green)':'var(--text3)'}">
+        ${done?'✅ ทำแล้ว':'ยังไม่ทำ'}
+      </div>
+    </div>`;
+  }).join('');
+  streakEl.innerHTML = habits.map(h=>{
+    const streak=getStreak(h.id);
+    const total=habitLogs.filter(l=>l.habitId===h.id).length;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:20px">${h.icon}</div>
+      <div style="flex:1;font-size:13px;font-weight:600">${escHtml(h.name)}</div>
+      <div style="text-align:right">
+        <div style="font-size:16px;font-weight:700;color:var(--gold);font-family:'IBM Plex Mono',monospace">🔥${streak}</div>
+        <div style="font-size:9px;color:var(--text3)">รวม ${total} วัน</div>
+      </div>
+      <button class="btn sm danger" onclick="deleteHabit(${h.id})">ลบ</button>
+    </div>`;
+  }).join('');
+}
+
+/* ============================
+   JOURNAL
+   ============================ */
+let journals = JSON.parse(localStorage.getItem('knm_journal')||'[]');
+let editingJournalId = null;
+let selectedMood = '';
+
+function newJournalEntry() {
+  const today=new Date().toISOString().split('T')[0];
+  const existing=journals.find(j=>j.date===today);
+  if (existing) { openJournalModal(existing.id); return; }
+  const j={ id:Date.now(), date:today, body:'', mood:'', updatedAt:new Date().toISOString() };
+  journals.unshift(j);
+  localStorage.setItem('knm_journal', JSON.stringify(journals));
+  openJournalModal(j.id);
+  renderJournal();
+}
+function openJournalModal(id) {
+  const j=journals.find(x=>x.id===id); if(!j) return;
+  editingJournalId=id; selectedMood=j.mood||'';
+  const d=new Date(j.date+'T00:00:00');
+  const dayNames=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+  document.getElementById('jm-date-title').textContent=`วัน${dayNames[d.getDay()]}ที่ ${fmtDate(j.date)}`;
+  document.getElementById('jm-body').value=j.body||'';
+  document.getElementById('jm-mood-display').textContent=j.mood?'ความรู้สึก: '+j.mood:'';
+  document.getElementById('jm-delete-btn').onclick=()=>deleteJournal(id);
+  document.querySelectorAll('.mood-btn').forEach(b=>b.style.opacity=b.dataset.mood===j.mood?'1':'0.4');
+  document.getElementById('journal-modal').classList.add('open');
+}
+function selectMood(el) {
+  selectedMood=el.dataset.mood;
+  document.querySelectorAll('.mood-btn').forEach(b=>b.style.opacity=b===el?'1':'0.4');
+  document.getElementById('jm-mood-display').textContent='ความรู้สึก: '+selectedMood;
+}
+function saveJournalEntry() {
+  const j=journals.find(x=>x.id===editingJournalId); if(!j) return;
+  j.body=document.getElementById('jm-body').value;
+  j.mood=selectedMood;
+  j.updatedAt=new Date().toISOString();
+  localStorage.setItem('knm_journal', JSON.stringify(journals));
+  document.getElementById('journal-modal').classList.remove('open');
+  renderJournal();
+}
+function deleteJournal(id) {
+  if(!confirm('ลบ journal นี้?')) return;
+  journals=journals.filter(j=>j.id!==id);
+  localStorage.setItem('knm_journal', JSON.stringify(journals));
+  document.getElementById('journal-modal').classList.remove('open');
+  renderJournal();
+}
+function renderJournal() {
+  const el=document.getElementById('journal-list');
+  el.innerHTML = journals.length ? journals.map(j=>`
+    <div class="card" onclick="openJournalModal(${j.id})" style="cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:12px;color:var(--text3);font-family:'IBM Plex Mono',monospace">${fmtDate(j.date)}</div>
+        <div style="font-size:18px">${j.mood||'📓'}</div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical">
+        ${j.body?escHtml(j.body):'<span style="color:var(--text3)">ยังไม่ได้เขียนอะไรค่ะ...</span>'}
+      </div>
+    </div>`).join('') : '<p class="empty">กด "+ เขียนวันนี้" เพื่อเริ่มเขียนค่ะ</p>';
+}
+
+/* ============================
+   GOALS
+   ============================ */
+let lifeGoals = JSON.parse(localStorage.getItem('knm_goals')||'{"short":[],"mid":[],"long":[]}');
+
+function switchGoalsTab(t) {
+  document.querySelectorAll('#page-goals .nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#page-goals .inner-section').forEach(s=>s.classList.remove('active'));
+  document.querySelector(`#page-goals .nav-btn[onclick="switchGoalsTab('${t}')"]`).classList.add('active');
+  document.getElementById('gtab-'+t).classList.add('active');
+  renderGoals(t);
+}
+function addGoal(term) {
+  const title=document.getElementById(`gl-${term}-title`).value.trim();
+  const due=document.getElementById(`gl-${term}-due`).value;
+  const note=document.getElementById(`gl-${term}-note`).value.trim();
+  if (!title) { alert('กรอกเป้าหมายด้วยค่ะ'); return; }
+  if (!lifeGoals[term]) lifeGoals[term]=[];
+  lifeGoals[term].push({ id:Date.now(), title, due, note, done:false, createdAt:new Date().toISOString() });
+  localStorage.setItem('knm_goals', JSON.stringify(lifeGoals));
+  [`gl-${term}-title`,`gl-${term}-due`,`gl-${term}-note`].forEach(id=>document.getElementById(id).value='');
+  renderGoals(term);
+}
+function toggleGoal(term,id) {
+  const g=lifeGoals[term].find(x=>x.id===id); if(g) g.done=!g.done;
+  localStorage.setItem('knm_goals', JSON.stringify(lifeGoals));
+  renderGoals(term);
+}
+function deleteGoal(term,id) {
+  lifeGoals[term]=lifeGoals[term].filter(g=>g.id!==id);
+  localStorage.setItem('knm_goals', JSON.stringify(lifeGoals));
+  renderGoals(term);
+}
+function renderGoals(term) {
+  const el=document.getElementById(`goals-${term}-list`);
+  const goals=lifeGoals[term]||[];
+  const termEmoji={short:'⚡',mid:'🎯',long:'🌟'};
+  el.innerHTML = goals.length ? goals.map(g=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--surface2);border:1px solid ${g.done?'var(--green)':'var(--border)'};border-radius:var(--radius-sm);margin-bottom:8px;opacity:${g.done?0.6:1}">
+      <div onclick="toggleGoal('${term}',${g.id})" style="width:22px;height:22px;border-radius:50%;border:2px solid ${g.done?'var(--green)':'var(--border2)'};background:${g.done?'var(--green-bg)':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-top:1px">
+        ${g.done?'<span style="font-size:11px;color:var(--green)">✓</span>':''}
+      </div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600;${g.done?'text-decoration:line-through;color:var(--text3)':''}">${escHtml(g.title)}</div>
+        ${g.note?`<div style="font-size:11px;color:var(--text3);margin-top:2px">${escHtml(g.note)}</div>`:''}
+        ${g.due?`<div style="font-size:10px;color:var(--text3);margin-top:3px">📅 ภายใน ${fmtDate(g.due)}</div>`:''}
+      </div>
+      <button class="btn sm danger" onclick="deleteGoal('${term}',${g.id})">ลบ</button>
+    </div>`).join('') : `<p class="empty">ยังไม่มีเป้าหมาย ${termEmoji[term]} ค่ะ</p>`;
+}
+
 
 /* ============================
    INIT
