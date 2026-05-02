@@ -1875,11 +1875,64 @@ function addDebt() {
 }
 function payDebt(id) {
   const d = debts.find(x=>x.id===id); if (!d) return;
-  const amt = parseFloat(prompt(`จ่าย "${d.name}" เท่าไหร่?\n(ค้างอยู่ ฿${fmtFull(d.amount-(d.paid||0))})`));
-  if (isNaN(amt)||amt<=0) return;
+  const remaining = d.amount - (d.paid||0);
+  let modal = document.getElementById('pay-debt-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'pay-debt-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `<div class="modal" style="max-width:340px">
+      <div class="modal-header">
+        <div class="modal-title" id="pdm-title">จ่ายหนี้</div>
+        <button class="btn sm" onclick="document.getElementById('pay-debt-modal').classList.remove('open')">✕</button>
+      </div>
+      <div id="pdm-info" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="number" id="pdm-amount" placeholder="จำนวนที่จ่าย (฿)" min="0" inputmode="decimal"
+          style="flex:1;padding:9px 11px;font-size:15px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text)">
+        <button class="btn primary" onclick="confirmPayDebt()">ยืนยัน</button>
+      </div>
+      <button class="btn sm" onclick="confirmPayDebtFull()" style="width:100%;color:var(--green);border-color:var(--green-bg)">จ่ายครบทั้งหมด ฿<span id="pdm-full"></span></button>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if(e.target===modal) modal.classList.remove('open'); });
+  }
+  modal._currentId = id;
+  document.getElementById('pdm-title').textContent = 'จ่ายหนี้ — ' + d.name;
+  document.getElementById('pdm-full').textContent = fmtFull(remaining);
+  document.getElementById('pdm-amount').value = '';
+  document.getElementById('pdm-amount').max = remaining;
+  const pct = d.amount > 0 ? Math.round((d.paid||0)/d.amount*100) : 0;
+  document.getElementById('pdm-info').innerHTML = `
+    <div style="margin-bottom:6px">ยอดหนี้ทั้งหมด <b style="font-family:'IBM Plex Mono',monospace">฿${fmtFull(d.amount)}</b></div>
+    ${d.paid>0?`<div style="margin-bottom:6px;color:var(--green)">จ่ายแล้ว <b style="font-family:'IBM Plex Mono',monospace">฿${fmtFull(d.paid)}</b></div>`:''}
+    <div style="color:var(--red)">ค้างอยู่ <b style="font-family:'IBM Plex Mono',monospace">฿${fmtFull(remaining)}</b></div>
+    <div style="margin-top:8px;background:var(--surface2);border-radius:4px;height:8px;overflow:hidden">
+      <div style="height:100%;width:${pct}%;background:var(--green);border-radius:4px"></div>
+    </div>`;
+  modal.classList.add('open');
+  setTimeout(()=>document.getElementById('pdm-amount').focus(),100);
+}
+function confirmPayDebt() {
+  const modal = document.getElementById('pay-debt-modal');
+  const id = modal._currentId;
+  const d = debts.find(x=>x.id===id); if (!d) return;
+  const amt = parseFloat(document.getElementById('pdm-amount').value);
+  const remaining = d.amount-(d.paid||0);
+  if (!amt||isNaN(amt)||amt<=0) { alert('กรุณาใส่จำนวนเงินค่ะ'); return; }
+  if (amt > remaining) { alert('จำนวนมากกว่ายอดค้างค่ะ (ค้างอยู่ ฿'+fmtFull(remaining)+')'); return; }
   d.paid = Math.min(d.amount, (d.paid||0)+amt);
   if (d.paid>=d.amount) d.status='paid';
   saveBudget(); renderDebt();
+  modal.classList.remove('open');
+}
+function confirmPayDebtFull() {
+  const modal = document.getElementById('pay-debt-modal');
+  const id = modal._currentId;
+  const d = debts.find(x=>x.id===id); if (!d) return;
+  d.paid = d.amount; d.status = 'paid';
+  saveBudget(); renderDebt();
+  modal.classList.remove('open');
 }
 function deleteDebt(id) {
   if (!confirm('ลบรายการหนี้นี้?')) return;
@@ -2783,10 +2836,43 @@ function addSavingGoal() {
 }
 function addToSaving(id) {
   const g=savingGoals.find(x=>x.id===id); if(!g) return;
-  const amt=parseFloat(prompt(`เพิ่มเงินออมสำหรับ "${g.name}" เท่าไหร่?`))||0;
-  if (amt<=0) return;
-  g.current=Math.min(g.target, g.current+amt);
+  const remaining = g.target - g.current;
+  let modal = document.getElementById('saving-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'saving-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `<div class="modal" style="max-width:320px">
+      <div class="modal-header">
+        <div class="modal-title" id="sm-title">เพิ่มเงินออม</div>
+        <button class="btn sm" onclick="document.getElementById('saving-modal').classList.remove('open')">✕</button>
+      </div>
+      <div id="sm-info" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="number" id="sm-amount" placeholder="จำนวนเงิน (฿)" min="0" inputmode="decimal"
+          style="flex:1;padding:9px 11px;font-size:15px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text)">
+        <button class="btn primary" onclick="confirmAddSaving()">เพิ่ม</button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('open'); });
+  }
+  modal._currentId = id;
+  document.getElementById('sm-title').textContent = 'เพิ่มเงินออม — ' + g.name;
+  document.getElementById('sm-amount').value = '';
+  document.getElementById('sm-info').innerHTML = `มีอยู่แล้ว <b style="color:var(--green);font-family:'IBM Plex Mono',monospace">฿${fmtFull(g.current)}</b> / เป้า <b style="font-family:'IBM Plex Mono',monospace">฿${fmtFull(g.target)}</b>`;
+  modal.classList.add('open');
+  setTimeout(()=>document.getElementById('sm-amount').focus(),100);
+}
+function confirmAddSaving() {
+  const modal = document.getElementById('saving-modal');
+  const id = modal._currentId;
+  const g = savingGoals.find(x=>x.id===id); if(!g) return;
+  const amt = parseFloat(document.getElementById('sm-amount').value)||0;
+  if (amt<=0) { alert('กรุณาใส่จำนวนเงินค่ะ'); return; }
+  g.current = Math.min(g.target, g.current+amt);
   localStorage.setItem('knm_saving', JSON.stringify(savingGoals));
+  modal.classList.remove('open');
   renderSaving();
 }
 function deleteSavingGoal(id) {
