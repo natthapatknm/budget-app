@@ -1616,21 +1616,18 @@ renderHomeStats();
    HOME
    ============================ */
 function renderHomeStats() {
-  const totalIncome = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const totalIncome  = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const totalExpense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  // คงเหลือจริง = รายรับที่ได้รับแล้ว - รายจ่ายทั้งหมด
-  // received===false หมายถึง "รอรับ" เฉพาะรายรับเท่านั้น
-  const receivedIncome = transactions.filter(t=>t.type==='income'&&t.received!==false).reduce((s,t)=>s+t.amount,0);
-  const pendingIncome  = transactions.filter(t=>t.type==='income'&&t.received===false).reduce((s,t)=>s+t.amount,0);
-  const balance = receivedIncome - totalExpense;
+  const balance = totalIncome - totalExpense;
   const pendingTodos = todos.filter(t=>!t.done).length;
-  const mangaCount = mangas.length;
+  const mangaCount   = mangas.length;
   const el = document.getElementById('qs-balance');
   el.textContent = '฿'+fmt(balance);
   el.style.color = balance >= 0 ? 'var(--green)' : 'var(--red)';
-  document.getElementById('qs-todo').textContent = pendingTodos;
+  document.getElementById('qs-todo').textContent  = pendingTodos;
   document.getElementById('qs-manga').textContent = mangaCount;
 }
+
 
 /* ============================
    BUDGET TABS
@@ -1664,9 +1661,7 @@ function addTransaction() {
   const amount = parseFloat(document.getElementById('t-amount').value);
   const date = document.getElementById('t-date').value;
   if (!desc || !amount || isNaN(amount) || amount <= 0 || !date) { alert('กรุณากรอกรายละเอียด จำนวนเงิน และวันที่ค่ะ'); return; }
-  // income: รอรับ (received=false) by default, expense: จ่ายแล้ว (received=true) by default
-  const received = type === 'expense' ? true : false;
-  transactions.unshift({ id: Date.now(), type, cat: cat||'ทั่วไป', desc, amount, date, received });
+  transactions.unshift({ id: Date.now(), type, cat: cat||'ทั่วไป', desc, amount, date, received: true });
   saveBudget();
   ['t-cat','t-desc','t-amount'].forEach(id => document.getElementById(id).value='');
   updateCatList(); renderTransactions(); renderBudgetDashboard();
@@ -1692,26 +1687,15 @@ function renderTransactions() {
   });
   const el = document.getElementById('t-table');
   if (!list.length) { el.innerHTML='<p class="empty">ไม่มีรายการค่ะ</p>'; return; }
-  el.innerHTML = `<table><thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวด</th><th>รายละเอียด</th><th style="text-align:right">฿</th><th>สถานะ</th><th></th></tr></thead><tbody>`
-    + list.map(t => {
-      // received=true means: income=ได้รับแล้ว, expense=จ่ายแล้ว
-      // received=false means: income=รอรับ, expense=รอจ่าย
-      const isReceived = t.received !== false; // backward compat: old records default true
-      const statusLabel = t.type==='income'
-        ? (isReceived ? 'ได้รับแล้ว' : 'รอรับ')
-        : (isReceived ? 'จ่ายแล้ว' : 'รอจ่าย');
-      const statusStyle = isReceived
-        ? 'color:var(--green);border-color:var(--green-bg)'
-        : 'color:var(--amber);border-color:var(--amber-bg)';
-      return `<tr>
-        <td style="white-space:nowrap">${fmtDate(t.date)}</td>
-        <td><span class="badge ${t.type}">${t.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
-        <td>${escHtml(t.cat)}</td><td>${escHtml(t.desc)}</td>
-        <td style="text-align:right"><span class="${t.type==='income'?'amount-pos':'amount-neg'}">${t.type==='income'?'+':'-'}${fmtFull(t.amount)}</span></td>
-        <td><button class="btn sm" onclick="toggleTxReceived(${t.id})" style="${statusStyle}">${statusLabel}</button></td>
-        <td><button class="btn sm danger" onclick="deleteTransaction(${t.id})">ลบ</button></td>
-      </tr>`;
-    }).join('') + '</tbody></table>';
+  el.innerHTML = `<table><thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวด</th><th>รายละเอียด</th><th style="text-align:right">จำนวน (฿)</th><th></th></tr></thead><tbody>`
+    + list.map(t => `<tr>
+      <td style="white-space:nowrap">${fmtDate(t.date)}</td>
+      <td><span class="badge ${t.type}">${t.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
+      <td>${escHtml(t.cat)}</td>
+      <td>${escHtml(t.desc)}</td>
+      <td style="text-align:right"><span class="${t.type==='income'?'amount-pos':'amount-neg'}">${t.type==='income'?'+':'-'}${fmtFull(t.amount)}</span></td>
+      <td><button class="btn sm danger" onclick="deleteTransaction(${t.id})">ลบ</button></td>
+    </tr>`).join('') + '</tbody></table>';
 }
 
 /* REIMBURSEMENT */
@@ -2031,19 +2015,17 @@ function renderDebt() {
 function renderBudgetDashboard() {
   const totalIncome = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const totalExpense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  // คงเหลือจริง = รายรับที่ได้รับแล้ว - รายจ่ายทั้งหมด
-  // received===false หมายถึง "รอรับ" เฉพาะรายรับเท่านั้น
-  const receivedIncome = transactions.filter(t=>t.type==='income'&&t.received!==false).reduce((s,t)=>s+t.amount,0);
-  const pendingIncome  = transactions.filter(t=>t.type==='income'&&t.received===false).reduce((s,t)=>s+t.amount,0);
-  const balance = receivedIncome - totalExpense;
+  // คงเหลือ = รายรับทั้งหมด - รายจ่ายทั้งหมด
+  const balance = totalIncome - totalExpense;
+  const pendingIncome = transactions.filter(t=>t.type==='income'&&t.received===false).reduce((s,t)=>s+t.amount,0);
   const pendingReimb = reimbursements.filter(r=>r.status==='pending').reduce((s,r)=>s+r.amount,0);
   const monthlyFixed = (typeof recurringList !== 'undefined') ? recurringList.filter(r=>r.cycle==='monthly').reduce((s,r)=>s+r.amount,0) : 0;
   const totalDebtLeft = debts.reduce((s,d)=>s+(d.amount-(d.paid||0)),0);
   document.getElementById('b-metrics').innerHTML = `
-    <div class="metric"><div class="metric-label">รายรับ (รับแล้ว)</div><div class="metric-value g">฿${fmt(receivedIncome)}</div></div>
-    <div class="metric"><div class="metric-label">รอรับอยู่</div><div class="metric-value" style="color:var(--amber)">฿${fmt(pendingIncome)}</div></div>
+    <div class="metric"><div class="metric-label">รายรับทั้งหมด</div><div class="metric-value g">฿${fmt(totalIncome)}</div></div>
     <div class="metric"><div class="metric-label">รายจ่ายทั้งหมด</div><div class="metric-value r">฿${fmt(totalExpense)}</div></div>
     <div class="metric"><div class="metric-label">คงเหลือ</div><div class="metric-value ${balance>=0?'g':'r'}">฿${fmt(balance)}</div></div>
+    <div class="metric"><div class="metric-label">รอรับอยู่</div><div class="metric-value" style="color:var(--amber)">฿${fmt(pendingIncome)}</div></div>
     <div class="metric"><div class="metric-label">สำรองค้างรับ</div><div class="metric-value b">฿${fmt(pendingReimb)}</div></div>
     <div class="metric"><div class="metric-label">หนี้ค้างชำระ</div><div class="metric-value p">฿${fmt(totalDebtLeft)}</div></div>
     <div class="metric"><div class="metric-label">ค่าใช้จ่ายประจำ/ด</div><div class="metric-value r">฿${fmt(monthlyFixed)}</div></div>`;
