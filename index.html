@@ -2025,7 +2025,6 @@ function renderBudgetDashboard() {
     <div class="metric"><div class="metric-label">รายรับทั้งหมด</div><div class="metric-value g">฿${fmt(totalIncome)}</div></div>
     <div class="metric"><div class="metric-label">รายจ่ายทั้งหมด</div><div class="metric-value r">฿${fmt(totalExpense)}</div></div>
     <div class="metric"><div class="metric-label">คงเหลือ</div><div class="metric-value ${balance>=0?'g':'r'}">฿${fmt(balance)}</div></div>
-    <div class="metric"><div class="metric-label">รอรับอยู่</div><div class="metric-value" style="color:var(--amber)">฿${fmt(pendingIncome)}</div></div>
     <div class="metric"><div class="metric-label">สำรองค้างรับ</div><div class="metric-value b">฿${fmt(pendingReimb)}</div></div>
     <div class="metric"><div class="metric-label">หนี้ค้างชำระ</div><div class="metric-value p">฿${fmt(totalDebtLeft)}</div></div>
     <div class="metric"><div class="metric-label">ค่าใช้จ่ายประจำ/ด</div><div class="metric-value r">฿${fmt(monthlyFixed)}</div></div>`;
@@ -3490,6 +3489,18 @@ document.getElementById('f-month').value = today.substring(0,7);
 
 // myLinks already declared in DATA section — just render
 renderHomeStats();
+
+// Migrate old records: set all income received=false → true (one-time fix)
+let migrated = false;
+transactions.forEach(t => {
+  if (t.type === 'income' && t.received === false) {
+    t.received = true;
+    migrated = true;
+  }
+});
+if (migrated) {
+  localStorage.setItem('ball_tx', JSON.stringify(transactions));
+}
 
 // App ready — no blocking network calls on startup
 showSyncStatus(SB_KEY ? '☁️ กด sync' : '🔑 ตั้ง key', SB_KEY ? 'synced' : 'error');
