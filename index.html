@@ -643,6 +643,7 @@ tr:hover td { background: var(--surface2); }
     <button class="nav-btn" onclick="switchBudgetTab('transactions')">รายรับ-จ่าย</button>
     <button class="nav-btn" onclick="switchBudgetTab('reimbursement')">สำรองจ่าย</button>
     <button class="nav-btn" onclick="switchBudgetTab('debt')">หนี้สิน</button>
+    <button class="nav-btn" onclick="switchBudgetTab('recurring')">🔄 ประจำ</button>
   </nav>
   <div class="scroll-content" id="budget-scroll">
     <div id="btab-dashboard" class="inner-section active">
@@ -739,6 +740,36 @@ tr:hover td { background: var(--surface2); }
         <div class="table-wrap" id="d-table"></div>
       </div>
     </div>
+
+    <!-- TAB: ค่าใช้จ่ายประจำ -->
+    <div id="btab-recurring" class="inner-section">
+      <div class="card">
+        <div class="card-title">เพิ่มค่าใช้จ่ายประจำ</div>
+        <div class="form-grid form-2">
+          <input type="text" id="rec-name" placeholder="เช่น Netflix, ค่าโทรศัพท์, ค่าเน็ต">
+          <input type="number" id="rec-amount" placeholder="จำนวนเงิน (฿/เดือน)" min="0" inputmode="decimal">
+        </div>
+        <div class="form-grid form-3">
+          <select id="rec-cycle">
+            <option value="monthly">ทุกเดือน</option>
+            <option value="yearly">ทุกปี</option>
+            <option value="weekly">ทุกสัปดาห์</option>
+          </select>
+          <input type="number" id="rec-day" placeholder="วันที่ต้องจ่าย เช่น 1, 15" min="1" max="31" inputmode="numeric">
+          <input type="text" id="rec-note" placeholder="หมายเหตุ">
+        </div>
+        <div class="btn-row"><button class="btn primary" onclick="addRecurring()">+ เพิ่ม</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">สรุปค่าใช้จ่ายประจำ</div>
+        <div id="rec-summary"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">รายการทั้งหมด</div>
+        <div id="rec-list"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1269,6 +1300,7 @@ let debts          = JSON.parse(localStorage.getItem('ball_debt')  || '[]');
 let todos          = JSON.parse(localStorage.getItem('ball_todo')  || '[]');
 let mangas         = JSON.parse(localStorage.getItem('ball_manga') || '[]');
 let myLinks        = JSON.parse(localStorage.getItem('ball_mylinks')|| '[]');
+let recurringList = JSON.parse(localStorage.getItem('knm_recurring')||'[]');
 let barChartInst = null, pieChartInst = null;
 let saveTimer = null, syncTimer = null;
 
@@ -1981,6 +2013,7 @@ function renderBudgetDashboard() {
   const balance = receivedIncome - paidExpense;
   const pendingIncome = totalIncome - receivedIncome;
   const pendingReimb = reimbursements.filter(r=>r.status==='pending').reduce((s,r)=>s+r.amount,0);
+  const monthlyFixed = (typeof recurringList !== 'undefined') ? recurringList.filter(r=>r.cycle==='monthly').reduce((s,r)=>s+r.amount,0) : 0;
   const totalDebtLeft = debts.reduce((s,d)=>s+(d.amount-(d.paid||0)),0);
   document.getElementById('b-metrics').innerHTML = `
     <div class="metric"><div class="metric-label">รายรับทั้งหมด</div><div class="metric-value g">฿${fmt(totalIncome)}</div></div>
@@ -1988,7 +2021,8 @@ function renderBudgetDashboard() {
     <div class="metric"><div class="metric-label">รายจ่ายทั้งหมด</div><div class="metric-value r">฿${fmt(totalExpense)}</div></div>
     <div class="metric"><div class="metric-label">คงเหลือจริง</div><div class="metric-value ${balance>=0?'g':'r'}">฿${fmt(balance)}</div></div>
     <div class="metric"><div class="metric-label">สำรองค้างรับ</div><div class="metric-value b">฿${fmt(pendingReimb)}</div></div>
-    <div class="metric"><div class="metric-label">หนี้ค้างชำระ</div><div class="metric-value p">฿${fmt(totalDebtLeft)}</div></div>`;
+    <div class="metric"><div class="metric-label">หนี้ค้างชำระ</div><div class="metric-value p">฿${fmt(totalDebtLeft)}</div></div>
+    <div class="metric"><div class="metric-label">ค่าใช้จ่ายประจำ/ด</div><div class="metric-value r">฿${fmt(monthlyFixed)}</div></div>`;
 
   const now = new Date(); const months = [];
   for (let i=5;i>=0;i--) {
@@ -3108,6 +3142,154 @@ function renderGoals(term) {
     </div>`).join('') : `<p class="empty">ยังไม่มีเป้าหมาย ${termEmoji[term]} ค่ะ</p>`;
 }
 
+
+/* ============================
+   RECURRING EXPENSES
+   ============================ */
+function addRecurring() {
+  const name   = document.getElementById('rec-name').value.trim();
+  const amount = parseFloat(document.getElementById('rec-amount').value);
+  const cycle  = document.getElementById('rec-cycle').value;
+  const day    = parseInt(document.getElementById('rec-day').value)||null;
+  const note   = document.getElementById('rec-note').value.trim();
+  if (!name||!amount||isNaN(amount)||amount<=0) { alert('กรอกชื่อและจำนวนเงินด้วยค่ะ'); return; }
+  recurringList.push({
+    id: Date.now(), name, amount, cycle, day, note,
+    lastPaid: null, createdAt: new Date().toISOString()
+  });
+  localStorage.setItem('knm_recurring', JSON.stringify(recurringList));
+  ['rec-name','rec-amount','rec-day','rec-note'].forEach(id=>document.getElementById(id).value='');
+  renderRecurring();
+}
+
+function markRecurringPaid(id) {
+  const r = recurringList.find(x=>x.id===id); if(!r) return;
+  r.lastPaid = new Date().toISOString().split('T')[0];
+  localStorage.setItem('knm_recurring', JSON.stringify(recurringList));
+  // Also add to transactions automatically
+  transactions.unshift({
+    id: Date.now(), type:'expense',
+    cat: 'ค่าใช้จ่ายประจำ',
+    desc: r.name + (r.note?' ('+r.note+')':''),
+    amount: r.amount,
+    date: new Date().toISOString().split('T')[0],
+    received: true
+  });
+  saveBudget();
+  renderRecurring();
+  alert('✅ บันทึกการจ่าย '+r.name+' แล้วค่ะ เพิ่มเข้ารายจ่ายอัตโนมัติแล้ว');
+}
+
+function deleteRecurring(id) {
+  if(!confirm('ลบรายการนี้?')) return;
+  recurringList = recurringList.filter(r=>r.id!==id);
+  localStorage.setItem('knm_recurring', JSON.stringify(recurringList));
+  renderRecurring();
+}
+
+function isRecurringDueSoon(r) {
+  if (!r.day) return false;
+  const today = new Date();
+  const dueDay = r.day;
+  const todayDay = today.getDate();
+  // due within 3 days
+  const diff = dueDay - todayDay;
+  return diff >= 0 && diff <= 3;
+}
+
+function isRecurringOverdue(r) {
+  if (!r.day) return false;
+  const today = new Date();
+  const todayDay = today.getDate();
+  if (r.day < todayDay) {
+    // check if already paid this month
+    if (!r.lastPaid) return true;
+    const lastPaid = new Date(r.lastPaid);
+    return !(lastPaid.getMonth()===today.getMonth() && lastPaid.getFullYear()===today.getFullYear());
+  }
+  return false;
+}
+
+function isPaidThisMonth(r) {
+  if (!r.lastPaid) return false;
+  const today = new Date();
+  const last = new Date(r.lastPaid);
+  return last.getMonth()===today.getMonth() && last.getFullYear()===today.getFullYear();
+}
+
+function renderRecurring() {
+  const cycleLabel = { monthly:'/ เดือน', yearly:'/ ปี', weekly:'/ สัปดาห์' };
+  const totalMonthly = recurringList.reduce((s,r) => {
+    if (r.cycle==='monthly') return s+r.amount;
+    if (r.cycle==='yearly') return s+r.amount/12;
+    if (r.cycle==='weekly') return s+r.amount*4.33;
+    return s;
+  }, 0);
+  const unpaidCount = recurringList.filter(r=>!isPaidThisMonth(r)).length;
+  const unpaidTotal = recurringList.filter(r=>!isPaidThisMonth(r) && r.cycle==='monthly').reduce((s,r)=>s+r.amount,0);
+
+  // Summary
+  const sumEl = document.getElementById('rec-summary');
+  sumEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px">
+    <div style="background:var(--surface2);border-radius:var(--radius-xs);padding:10px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:3px">ต่อเดือน</div>
+      <div style="font-size:16px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--red)">฿${fmt(totalMonthly)}</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:var(--radius-xs);padding:10px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:3px">ยังไม่จ่าย</div>
+      <div style="font-size:16px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--amber)">${unpaidCount} รายการ</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:var(--radius-xs);padding:10px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:3px">ค้างจ่าย</div>
+      <div style="font-size:16px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--red)">฿${fmt(unpaidTotal)}</div>
+    </div>
+  </div>`;
+
+  // List
+  const el = document.getElementById('rec-list');
+  if (!recurringList.length) { el.innerHTML='<p class="empty">ยังไม่มีรายการค่ะ</p>'; return; }
+
+  // Sort: overdue first, then due soon, then paid
+  const sorted = [...recurringList].sort((a,b) => {
+    const aOver = isRecurringOverdue(a), bOver = isRecurringOverdue(b);
+    const aDue = isRecurringDueSoon(a), bDue = isRecurringDueSoon(b);
+    const aPaid = isPaidThisMonth(a), bPaid = isPaidThisMonth(b);
+    if (aOver && !bOver) return -1;
+    if (!aOver && bOver) return 1;
+    if (aDue && !bDue) return -1;
+    if (!aDue && bDue) return 1;
+    if (!aPaid && bPaid) return -1;
+    if (aPaid && !bPaid) return 1;
+    return 0;
+  });
+
+  el.innerHTML = sorted.map(r => {
+    const paid = isPaidThisMonth(r);
+    const overdue = isRecurringOverdue(r);
+    const dueSoon = isRecurringDueSoon(r);
+    let statusColor = paid ? 'var(--green)' : overdue ? 'var(--red)' : dueSoon ? 'var(--amber)' : 'var(--text3)';
+    let statusLabel = paid ? '✅ จ่ายแล้ว' : overdue ? '⚠️ ค้างจ่าย' : dueSoon ? '🔔 ใกล้ถึง' : '⏳ รอจ่าย';
+    let borderColor = paid ? 'var(--border)' : overdue ? 'var(--red)' : dueSoon ? 'var(--amber)' : 'var(--border)';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:11px 12px;background:var(--surface2);border:1px solid ${borderColor};border-radius:var(--radius-sm);margin-bottom:8px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${escHtml(r.name)}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">
+          ${r.day?`วันที่ ${r.day} ·`:''} ${cycleLabel[r.cycle]||'/ เดือน'}
+          ${r.note?' · '+escHtml(r.note):''}
+        </div>
+        ${r.lastPaid?`<div style="font-size:10px;color:var(--text3);margin-top:2px">จ่ายล่าสุด ${fmtDate(r.lastPaid)}</div>`:''}
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:15px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--text)">฿${fmtFull(r.amount)}</div>
+        <div style="font-size:10px;color:${statusColor};margin-top:2px">${statusLabel}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+        ${!paid?`<button class="btn sm" onclick="markRecurringPaid(${r.id})" style="color:var(--green);border-color:var(--green-bg)">จ่ายแล้ว</button>`:''}
+        <button class="btn sm danger" onclick="deleteRecurring(${r.id})">ลบ</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 
 /* ============================
    INIT
