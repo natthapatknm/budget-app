@@ -773,22 +773,79 @@ tr:hover td { background: var(--surface2); }
 
     <!-- TAB: บัญชีเงิน -->
     <div id="btab-wallets" class="inner-section">
-      <div class="card">
-        <div class="card-title">เพิ่มบัญชีเงิน</div>
+
+      <!-- Summary bar -->
+      <div id="wallet-summary-bar"></div>
+
+      <!-- Wallet cards -->
+      <div id="wallet-cards"></div>
+
+      <!-- Selected wallet detail -->
+      <div id="wallet-detail" style="display:none">
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+            <div id="wd-icon" style="font-size:28px"></div>
+            <div style="flex:1">
+              <div id="wd-name" style="font-size:16px;font-weight:700"></div>
+              <div id="wd-note" style="font-size:11px;color:var(--text3)"></div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:10px;color:var(--text3)">ยอดปัจจุบัน</div>
+              <div id="wd-balance" style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace"></div>
+            </div>
+          </div>
+          <!-- Stats row -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1rem">
+            <div style="background:var(--green-bg);border-radius:var(--radius-xs);padding:8px;text-align:center">
+              <div style="font-size:9px;color:var(--green);margin-bottom:2px">รายรับ</div>
+              <div id="wd-income" style="font-size:14px;font-weight:700;color:var(--green);font-family:'IBM Plex Mono',monospace"></div>
+            </div>
+            <div style="background:var(--red-bg);border-radius:var(--radius-xs);padding:8px;text-align:center">
+              <div style="font-size:9px;color:var(--red);margin-bottom:2px">รายจ่าย</div>
+              <div id="wd-expense" style="font-size:14px;font-weight:700;color:var(--red);font-family:'IBM Plex Mono',monospace"></div>
+            </div>
+            <div style="background:var(--surface2);border-radius:var(--radius-xs);padding:8px;text-align:center">
+              <div style="font-size:9px;color:var(--text3);margin-bottom:2px">รายการ</div>
+              <div id="wd-count" style="font-size:14px;font-weight:700;font-family:'IBM Plex Mono',monospace"></div>
+            </div>
+          </div>
+          <!-- Add tx to this wallet -->
+          <div style="border-top:1px solid var(--border);padding-top:1rem">
+            <div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:8px">+ เพิ่มรายการในบัญชีนี้</div>
+            <div class="form-grid form-2" style="margin-bottom:7px">
+              <select id="wd-type">
+                <option value="income">รายรับ (+)</option>
+                <option value="expense">รายจ่าย (-)</option>
+              </select>
+              <input type="text" id="wd-cat" placeholder="หมวดหมู่" list="cat-list">
+            </div>
+            <div class="form-grid form-3">
+              <input type="text" id="wd-desc" placeholder="รายละเอียด">
+              <input type="number" id="wd-amount" placeholder="จำนวน (฿)" inputmode="decimal">
+              <input type="date" id="wd-date">
+            </div>
+            <div class="btn-row"><button class="btn primary" onclick="addTxToWallet()">+ เพิ่ม</button></div>
+          </div>
+        </div>
+        <!-- Transaction list -->
+        <div class="card">
+          <div class="card-title">รายการทั้งหมดในบัญชีนี้</div>
+          <div id="wd-tx-list"></div>
+        </div>
+      </div>
+
+      <!-- Add new wallet form -->
+      <div class="card" id="add-wallet-card">
+        <div class="card-title">+ เพิ่มบัญชีใหม่</div>
         <div class="form-grid form-2">
           <input type="text" id="wl-name" placeholder="ชื่อบัญชี เช่น เงินส่วนตัว, เงินกับแฟน">
-          <input type="text" id="wl-icon" placeholder="Emoji เช่น 💰 💑 🏦" maxlength="4">
+          <input type="text" id="wl-icon" placeholder="Emoji 💰 💑 🏦" maxlength="4">
         </div>
         <div class="form-grid form-2">
-          <input type="number" id="wl-balance" placeholder="ยอดเงินเริ่มต้น (฿)" min="0" inputmode="decimal">
-          <input type="text" id="wl-note" placeholder="หมายเหตุ">
+          <input type="number" id="wl-balance" placeholder="ยอดเริ่มต้น (฿)" min="0" inputmode="decimal">
+          <input type="text" id="wl-note" placeholder="หมายเหตุ เช่น บัญชีกสิกร">
         </div>
         <div class="btn-row"><button class="btn primary" onclick="addWallet()">+ เพิ่มบัญชี</button></div>
-      </div>
-      <div id="wallet-cards"></div>
-      <div class="card" id="wallet-tx-card" style="display:none">
-        <div class="card-title" id="wallet-tx-title">รายการของบัญชีนี้</div>
-        <div id="wallet-tx-list"></div>
       </div>
     </div>
 
@@ -3299,211 +3356,133 @@ function renderRecurring() {
 /* ============================
    WALLETS / ACCOUNTS
    ============================ */
+
+// walletId links a transaction to a wallet
+// wallet.initBalance = starting balance (manual)
+// wallet real balance = initBalance + income tx - expense tx
+
+function getWalletBalance(walletId) {
+  const w = wallets.find(x=>x.id===walletId); if (!w) return 0;
+  const txs = transactions.filter(t=>t.walletId===walletId);
+  const income  = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expense = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  return (w.initBalance||0) + income - expense;
+}
+
 function addWallet() {
   const name    = document.getElementById('wl-name').value.trim();
   const icon    = document.getElementById('wl-icon').value.trim() || '💰';
-  const balance = parseFloat(document.getElementById('wl-balance').value) || 0;
+  const initBal = parseFloat(document.getElementById('wl-balance').value) || 0;
   const note    = document.getElementById('wl-note').value.trim();
   if (!name) { alert('กรอกชื่อบัญชีด้วยค่ะ'); return; }
-  wallets.push({ id:Date.now(), name, icon, balance, note, createdAt:new Date().toISOString() });
+  wallets.push({ id:Date.now(), name, icon, initBalance:initBal, note, createdAt:new Date().toISOString() });
   localStorage.setItem('knm_wallets', JSON.stringify(wallets));
   ['wl-name','wl-icon','wl-balance','wl-note'].forEach(id=>document.getElementById(id).value='');
   renderWallets();
 }
 
-function addWalletTx(walletId) {
-  const w = wallets.find(x=>x.id===walletId); if (!w) return;
-  // Show modal for adding tx to this wallet
-  let modal = document.getElementById('wallet-tx-modal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'wallet-tx-modal';
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `<div class="modal" style="max-width:360px">
-      <div class="modal-header">
-        <div class="modal-title" id="wtm-title">เพิ่มรายการ</div>
-        <button class="btn sm" onclick="document.getElementById('wallet-tx-modal').classList.remove('open')">✕</button>
-      </div>
-      <div class="form-grid form-2" style="margin-bottom:8px">
-        <select id="wtm-type">
-          <option value="income">รายรับ (+)</option>
-          <option value="expense">รายจ่าย (-)</option>
-        </select>
-        <input type="text" id="wtm-cat" placeholder="หมวดหมู่">
-      </div>
-      <input type="text" id="wtm-desc" placeholder="รายละเอียด" style="margin-bottom:8px">
-      <div class="form-grid form-2" style="margin-bottom:12px">
-        <input type="number" id="wtm-amount" placeholder="จำนวนเงิน (฿)" min="0" inputmode="decimal">
-        <input type="date" id="wtm-date">
-      </div>
-      <button class="btn primary" onclick="confirmWalletTx()" style="width:100%">+ เพิ่มรายการ</button>
-    </div>`;
-    document.body.appendChild(modal);
-    modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('open'); });
-  }
-  modal._walletId = walletId;
-  document.getElementById('wtm-title').textContent = w.icon + ' ' + w.name;
-  document.getElementById('wtm-date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('wtm-amount').value = '';
-  document.getElementById('wtm-desc').value = '';
-  document.getElementById('wtm-cat').value = '';
-  modal.classList.add('open');
-}
-
-function confirmWalletTx() {
-  const modal = document.getElementById('wallet-tx-modal');
-  const walletId = modal._walletId;
-  const w = wallets.find(x=>x.id===walletId); if (!w) return;
-  const type   = document.getElementById('wtm-type').value;
-  const cat    = document.getElementById('wtm-cat').value.trim() || 'ทั่วไป';
-  const desc   = document.getElementById('wtm-desc').value.trim();
-  const amount = parseFloat(document.getElementById('wtm-amount').value);
-  const date   = document.getElementById('wtm-date').value;
-  if (!desc||!amount||isNaN(amount)||amount<=0||!date) { alert('กรอกข้อมูลให้ครบค่ะ'); return; }
-  // Update wallet balance
-  if (type==='income') w.balance += amount;
-  else w.balance = Math.max(0, w.balance - amount);
-  // Also add to main transactions with wallet tag
-  transactions.unshift({ id:Date.now(), type, cat, desc: '['+w.name+'] '+desc, amount, date, received:true, walletId });
-  localStorage.setItem('knm_wallets', JSON.stringify(wallets));
-  saveBudget();
-  modal.classList.remove('open');
-  renderWallets();
-  if (selectedWalletId===walletId) showWalletTx(walletId);
-}
-
-function showWalletTx(walletId) {
-  selectedWalletId = walletId;
-  const w = wallets.find(x=>x.id===walletId); if (!w) return;
-  const card = document.getElementById('wallet-tx-card');
-  const title = document.getElementById('wallet-tx-title');
-  const list  = document.getElementById('wallet-tx-list');
-  card.style.display = 'block';
-  title.textContent = w.icon+' '+w.name+' — ประวัติรายการ';
-  const txs = transactions.filter(t=>t.walletId===walletId);
-  list.innerHTML = txs.length ? txs.slice(0,30).map(t=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
-      <span style="color:var(--text3);min-width:65px;font-family:'IBM Plex Mono',monospace">${fmtDate(t.date)}</span>
-      <span style="flex:1">${escHtml(t.desc.replace('['+w.name+'] ',''))}</span>
-      <span class="${t.type==='income'?'amount-pos':'amount-neg'}">${t.type==='income'?'+':'-'}฿${fmtFull(t.amount)}</span>
-    </div>`).join('') : '<p class="empty">ยังไม่มีรายการค่ะ</p>';
-  // Scroll to card
-  card.scrollIntoView({ behavior:'smooth', block:'start' });
-}
-
 function deleteWallet(id) {
-  if (!confirm('ลบบัญชีนี้? (รายการในบัญชีนี้จะยังอยู่ในรายรับ-รายจ่าย)')) return;
+  if (!confirm('ลบบัญชีนี้? รายการที่บันทึกไว้จะยังอยู่ในรายรับ-รายจ่ายหลักค่ะ')) return;
   wallets = wallets.filter(w=>w.id!==id);
   localStorage.setItem('knm_wallets', JSON.stringify(wallets));
   if (selectedWalletId===id) {
-    selectedWalletId=null;
-    document.getElementById('wallet-tx-card').style.display='none';
+    selectedWalletId = null;
+    document.getElementById('wallet-detail').style.display='none';
   }
   renderWallets();
 }
 
-function editWalletBalance(id) {
+function selectWallet(id) {
+  selectedWalletId = id;
+  renderWallets();
+  renderWalletDetail(id);
+}
+
+function addTxToWallet() {
+  if (!selectedWalletId) return;
+  const w = wallets.find(x=>x.id===selectedWalletId); if (!w) return;
+  const type   = document.getElementById('wd-type').value;
+  const cat    = document.getElementById('wd-cat').value.trim() || 'ทั่วไป';
+  const desc   = document.getElementById('wd-desc').value.trim();
+  const amount = parseFloat(document.getElementById('wd-amount').value);
+  const date   = document.getElementById('wd-date').value;
+  if (!desc||!amount||isNaN(amount)||amount<=0||!date) { alert('กรอกข้อมูลให้ครบค่ะ'); return; }
+  // Add to main transactions with walletId tag
+  transactions.unshift({ id:Date.now(), type, cat, desc, amount, date, received:true, walletId:selectedWalletId });
+  saveBudget();
+  ['wd-desc','wd-amount'].forEach(id=>document.getElementById(id).value='');
+  renderWalletDetail(selectedWalletId);
+  renderWallets();
+}
+
+function renderWalletDetail(id) {
   const w = wallets.find(x=>x.id===id); if (!w) return;
-  let modal = document.getElementById('wallet-bal-modal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'wallet-bal-modal';
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `<div class="modal" style="max-width:300px">
-      <div class="modal-header">
-        <div class="modal-title">แก้ยอดเงิน</div>
-        <button class="btn sm" onclick="document.getElementById('wallet-bal-modal').classList.remove('open')">✕</button>
-      </div>
-      <div style="margin-bottom:10px;font-size:13px;color:var(--text2)">ยอดปัจจุบัน: <b id="wbm-current" style="font-family:'IBM Plex Mono',monospace;color:var(--gold)"></b></div>
-      <div style="display:flex;gap:8px">
-        <input type="number" id="wbm-amount" placeholder="ยอดเงินใหม่ (฿)" inputmode="decimal"
-          style="flex:1;padding:9px;font-size:15px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text)">
-        <button class="btn primary" onclick="confirmEditWalletBal()">บันทึก</button>
-      </div>
-    </div>`;
-    document.body.appendChild(modal);
-    modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('open'); });
-  }
-  modal._walletId = id;
-  document.getElementById('wbm-current').textContent = '฿'+fmtFull(w.balance);
-  document.getElementById('wbm-amount').value = w.balance;
-  modal.classList.add('open');
-}
+  const txs = transactions.filter(t=>t.walletId===id);
+  const income  = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expense = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const balance = (w.initBalance||0) + income - expense;
 
-function confirmEditWalletBal() {
-  const modal = document.getElementById('wallet-bal-modal');
-  const w = wallets.find(x=>x.id===modal._walletId); if (!w) return;
-  const val = parseFloat(document.getElementById('wbm-amount').value);
-  if (isNaN(val)) { alert('กรอกจำนวนเงินค่ะ'); return; }
-  w.balance = val;
-  localStorage.setItem('knm_wallets', JSON.stringify(wallets));
-  modal.classList.remove('open');
-  renderWallets();
+  document.getElementById('wd-icon').textContent    = w.icon;
+  document.getElementById('wd-name').textContent    = w.name;
+  document.getElementById('wd-note').textContent    = w.note || '';
+  const balEl = document.getElementById('wd-balance');
+  balEl.textContent    = '฿'+fmtFull(balance);
+  balEl.style.color    = balance>=0?'var(--green)':'var(--red)';
+  document.getElementById('wd-income').textContent  = '฿'+fmtFull(income);
+  document.getElementById('wd-expense').textContent = '฿'+fmtFull(expense);
+  document.getElementById('wd-count').textContent   = txs.length+' รายการ';
+  document.getElementById('wd-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('wallet-detail').style.display='block';
+
+  const listEl = document.getElementById('wd-tx-list');
+  listEl.innerHTML = txs.length ? txs.slice(0,50).map(t=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span style="color:var(--text3);min-width:65px;font-family:'IBM Plex Mono',monospace;flex-shrink:0">${fmtDate(t.date)}</span>
+      <span style="color:var(--text3);font-size:10px;flex-shrink:0">${escHtml(t.cat)}</span>
+      <span style="flex:1">${escHtml(t.desc)}</span>
+      <span class="${t.type==='income'?'amount-pos':'amount-neg'}" style="flex-shrink:0">${t.type==='income'?'+':'-'}฿${fmtFull(t.amount)}</span>
+    </div>`).join('') : '<p class="empty">ยังไม่มีรายการค่ะ</p>';
 }
 
 function renderWallets() {
-  const el = document.getElementById('wallet-cards');
+  const summaryEl = document.getElementById('wallet-summary-bar');
+  const cardsEl   = document.getElementById('wallet-cards');
+
   if (!wallets.length) {
-    el.innerHTML = `<div class="card" style="text-align:center;padding:2rem">
-      <div style="font-size:36px;margin-bottom:0.75rem">👛</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:6px">ยังไม่มีบัญชีค่ะ</div>
-      <div style="font-size:12px;color:var(--text3)">เพิ่มบัญชีแรกได้เลย เช่น เงินส่วนตัว, เงินกับแฟน</div>
-    </div>`;
+    if (summaryEl) summaryEl.innerHTML = '';
+    cardsEl.innerHTML = '';
     return;
   }
-  const totalAll = wallets.reduce((s,w)=>s+w.balance,0);
-  el.innerHTML = `
-    <div style="background:linear-gradient(135deg,#1e2a1e,#1a2020);border:1px solid var(--green);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:12px;color:var(--green)">รวมทุกบัญชี</div>
-      <div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--green)">฿${fmtFull(totalAll)}</div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:10px">
-    ${wallets.map(w=>`
-      <div style="background:var(--surface);border:1px solid ${selectedWalletId===w.id?'var(--gold)':'var(--border)'};border-radius:var(--radius-sm);padding:14px;cursor:pointer;transition:all 0.15s"
-        onclick="showWalletTx(${w.id});renderWallets()">
-        <div style="font-size:26px;margin-bottom:6px">${w.icon}</div>
-        <div style="font-size:13px;font-weight:600;margin-bottom:4px">${escHtml(w.name)}</div>
-        <div style="font-size:20px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${w.balance>=0?'var(--green)':'var(--red)'}">฿${fmtFull(w.balance)}</div>
-        ${w.note?`<div style="font-size:10px;color:var(--text3);margin-top:4px">${escHtml(w.note)}</div>`:''}
-        <div style="display:flex;gap:5px;margin-top:10px">
-          <button class="btn sm primary" onclick="event.stopPropagation();addWalletTx(${w.id})" style="flex:1;font-size:11px">+ รายการ</button>
-          <button class="btn sm" onclick="event.stopPropagation();editWalletBalance(${w.id})" style="font-size:11px;color:var(--gold);border-color:var(--gold-bg)">แก้ยอด</button>
-          <button class="btn sm danger" onclick="event.stopPropagation();deleteWallet(${w.id})" style="font-size:11px">ลบ</button>
-        </div>
-      </div>`).join('')}
+
+  const totalAll = wallets.reduce((s,w)=>s+getWalletBalance(w.id),0);
+
+  // Summary bar
+  if (summaryEl) summaryEl.innerHTML = `
+    <div style="background:linear-gradient(135deg,rgba(74,158,106,0.15),rgba(74,158,106,0.05));border:1px solid var(--green);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:11px;color:var(--green);font-family:'IBM Plex Mono',monospace;margin-bottom:3px">รวมทุกบัญชี</div>
+        <div style="font-size:10px;color:var(--text3)">${wallets.length} บัญชี</div>
+      </div>
+      <div style="font-size:26px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${totalAll>=0?'var(--green)':'var(--red)'}">฿${fmtFull(totalAll)}</div>
     </div>`;
+
+  // Cards
+  cardsEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:12px">
+    ${wallets.map(w=>{
+      const bal = getWalletBalance(w.id);
+      const txs = transactions.filter(t=>t.walletId===w.id);
+      const isSelected = selectedWalletId===w.id;
+      return `<div onclick="selectWallet(${w.id})"
+        style="background:var(--surface);border:2px solid ${isSelected?'var(--gold)':'var(--border)'};border-radius:var(--radius-sm);padding:14px;cursor:pointer;transition:all 0.15s">
+        <div style="font-size:26px;margin-bottom:6px">${w.icon}</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:2px">${escHtml(w.name)}</div>
+        <div style="font-size:18px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${bal>=0?'var(--green)':'var(--red)'}">฿${fmt(bal)}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">${txs.length} รายการ</div>
+        ${isSelected?'<div style="font-size:10px;color:var(--gold);margin-top:4px">▼ กำลังดู</div>':''}
+      </div>`;
+    }).join('')}
+  </div>
+  <div style="text-align:right;margin-bottom:4px">
+    <button class="btn sm danger" onclick="if(selectedWalletId)deleteWallet(selectedWalletId)" style="font-size:11px">ลบบัญชีที่เลือก</button>
+  </div>`;
 }
-
-/* ============================
-   INIT
-   ============================ */
-const today = new Date().toISOString().split('T')[0];
-const dayNames = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
-const d = new Date();
-const thMonth = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()];
-document.getElementById('home-date').textContent = `วัน${dayNames[d.getDay()]}ที่ ${d.getDate()} ${thMonth} ${d.getFullYear()+543}`;
-
-document.getElementById('t-date').value = today;
-document.getElementById('r-date').value = today;
-document.getElementById('f-month').value = today.substring(0,7);
-
-// myLinks already declared in DATA section — just render
-renderHomeStats();
-
-// Migrate old records: set all income received=false → true (one-time fix)
-let migrated = false;
-transactions.forEach(t => {
-  if (t.type === 'income' && t.received === false) {
-    t.received = true;
-    migrated = true;
-  }
-});
-if (migrated) {
-  localStorage.setItem('ball_tx', JSON.stringify(transactions));
-}
-
-// App ready — no blocking network calls on startup
-showSyncStatus(SB_KEY ? '☁️ กด sync' : '🔑 ตั้ง key', SB_KEY ? 'synced' : 'error');
-</script>
-</body>
-</html>
