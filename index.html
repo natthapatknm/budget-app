@@ -779,13 +779,17 @@ tr:hover td { background: var(--surface2); }
       <div class="card">
         <div class="card-title">เพิ่มบัญชี / กระเป๋าเงิน</div>
         <div class="form-grid form-2">
-          <input type="text" id="wl-name" placeholder="ชื่อบัญชี เช่น เงินส่วนตัว, เงินกับแฟน">
-          <input type="text" id="wl-icon" placeholder="Emoji เช่น 💰 💑 🏦" maxlength="4">
+          <input type="text" id="wl-name" placeholder="ชื่อบัญชี เช่น SCB, เงินกับแฟน">
+          <input type="text" id="wl-icon" placeholder="Emoji เช่น 💰 💑 🏦 📈" maxlength="4">
         </div>
         <div class="form-grid form-2">
+          <select id="wl-type">
+            <option value="normal">💰 บัญชีทั่วไป</option>
+            <option value="invest">📈 บัญชีลงทุน (ไม่นับคงเหลือ)</option>
+          </select>
           <input type="number" id="wl-init" placeholder="ยอดเงินตั้งต้น (฿)" min="0" inputmode="decimal">
-          <input type="text" id="wl-note" placeholder="หมายเหตุ">
         </div>
+        <input type="text" id="wl-note" placeholder="หมายเหตุ" style="margin-top:7px">
         <div class="btn-row"><button class="btn primary" onclick="addWallet()">+ เพิ่มบัญชี</button></div>
       </div>
       <div id="wallet-overview"></div>
@@ -1321,6 +1325,7 @@ let mangas         = JSON.parse(localStorage.getItem('ball_manga') || '[]');
 let myLinks        = JSON.parse(localStorage.getItem('ball_mylinks')|| '[]');
 let recurringList = JSON.parse(localStorage.getItem('knm_recurring')||'[]');
 let wallets = JSON.parse(localStorage.getItem('knm_wallets')||'[]');
+let stockHoldings = JSON.parse(localStorage.getItem('knm_stocks')||'[]');
 let selectedWalletId = null;
 let barChartInst = null, pieChartInst = null;
 let saveTimer = null, syncTimer = null;
@@ -1615,7 +1620,9 @@ renderHomeStats();
 function renderHomeStats() {
   const totalIncome  = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const totalExpense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  const balance = totalIncome - totalExpense;
+  const balance = wallets.length > 0
+    ? wallets.filter(w=>w.type!=='invest').reduce((s,w)=>s+getWalletBalance(w.id), 0)
+    : (totalIncome - totalExpense);
   const pendingTodos = todos.filter(t=>!t.done).length;
   const mangaCount   = mangas.length;
   const el = document.getElementById('qs-balance');
@@ -2024,9 +2031,12 @@ function renderDebt() {
 function renderBudgetDashboard() {
   const totalIncome = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const totalExpense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  // คงเหลือ = รายรับทั้งหมด - รายจ่ายทั้งหมด
-  const balance = totalIncome - totalExpense;
-  const pendingIncome = 0; // removed pending concept
+  // คงเหลือ = ยอดรวมจากบัญชี (ไม่รวมบัญชีลงทุน)
+  const walletBalance = wallets.filter(w=>w.type!=='invest').reduce((s,w)=>s+getWalletBalance(w.id), 0);
+  const noWalletInc = transactions.filter(t=>!t.walletId&&t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const noWalletExp = transactions.filter(t=>!t.walletId&&t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const balance = wallets.length > 0 ? walletBalance : (totalIncome - totalExpense);
+  const pendingIncome = 0;
   const pendingReimb = reimbursements.filter(r=>r.status==='pending').reduce((s,r)=>s+r.amount,0);
   const monthlyFixed = (typeof recurringList !== 'undefined') ? recurringList.filter(r=>r.cycle==='monthly').reduce((s,r)=>s+r.amount,0) : 0;
   const totalDebtLeft = debts.reduce((s,d)=>s+(d.amount-(d.paid||0)),0);
@@ -3319,9 +3329,11 @@ function addWallet() {
   const init  = parseFloat(document.getElementById('wl-init').value) || 0;
   const note  = document.getElementById('wl-note').value.trim();
   if (!name) { alert('กรอกชื่อบัญชีด้วยค่ะ'); return; }
-  wallets.push({ id: Date.now(), name, icon, note, initBalance: init });
+  const wtype = document.getElementById('wl-type').value;
+  wallets.push({ id: Date.now(), name, icon, note, initBalance: init, type: wtype });
   localStorage.setItem('knm_wallets', JSON.stringify(wallets));
   ['wl-name','wl-icon','wl-init','wl-note'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('wl-type').value = 'normal';
   // scroll to see new wallet
   renderWallets();
   document.getElementById('wallet-overview').scrollIntoView({ behavior:'smooth', block:'start' });
@@ -3461,35 +3473,55 @@ function renderWallets() {
   </div>
   <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">`;
 
-  html += wallets.map(w => {
+  const normalWallets = wallets.filter(w=>w.type!=='invest');
+  const investWallets = wallets.filter(w=>w.type==='invest');
+
+  const renderWalletCard = w => {
     const bal = getWalletBalance(w.id);
     const txs = getWalletTxs(w.id);
-    const inc = txs.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
-    const exp = txs.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
-    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px">
-      <!-- Row 1: icon + name + balance -->
+    const inc = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+    const exp = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    const isInvest = w.type==='invest';
+    const stocks = (stockHoldings||[]).filter(s=>s.walletId===w.id);
+    const totalCost = stocks.reduce((s,st)=>s+(st.price*st.qty),0);
+    return `<div style="background:var(--surface);border:1px solid ${isInvest?'var(--blue)':'var(--border)'};border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:8px">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-        <div style="font-size:28px;flex-shrink:0">${w.icon}</div>
+        <div style="font-size:28px;flex-shrink:0">${w.icon||'💰'}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:600">${escHtml(w.name)}</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px;font-weight:600">${escHtml(w.name)}</span>
+            ${isInvest?'<span style="font-size:10px;background:var(--blue-bg);color:var(--blue);padding:2px 6px;border-radius:20px">ลงทุน</span>':''}
+          </div>
           ${w.note?`<div style="font-size:11px;color:var(--text3)">${escHtml(w.note)}</div>`:''}
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:20px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${bal>=0?'var(--green)':'var(--red)'}">฿${fmtFull(bal)}</div>
           <div style="font-size:10px;color:var(--text3);margin-top:2px">
-            <span style="color:var(--green)">+฿${fmt(inc)}</span>
-            <span style="color:var(--text3)"> / </span>
-            <span style="color:var(--red)">−฿${fmt(exp)}</span>
+            <span style="color:var(--green)">+฿${fmt(inc)}</span> / <span style="color:var(--red)">−฿${fmt(exp)}</span>
           </div>
+          ${isInvest&&totalCost>0?`<div style="font-size:10px;color:var(--blue);margin-top:2px">ราคาทุน ฿${fmt(totalCost)}</div>`:''}
         </div>
       </div>
-      <!-- Row 2: buttons -->
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;margin-bottom:${isInvest?'10px':'0'}">
         <button class="btn primary" onclick="openWalletAddTx(${w.id})" style="flex:1;font-size:13px">+ เพิ่มรายการ</button>
-        <button class="btn danger" onclick="deleteWallet(${w.id})" style="padding:8px 14px;font-size:13px">ลบบัญชี</button>
+        ${isInvest?`<button class="btn sm" onclick="openAddStock(${w.id})" style="color:var(--blue);border-color:var(--blue-bg);font-size:13px;padding:8px 12px">+ หุ้น</button>`:''}
+        <button class="btn danger" onclick="deleteWallet(${w.id})" style="padding:8px 14px;font-size:13px">ลบ</button>
       </div>
-      <!-- Row 3: recent txs -->
-      ${txs.length > 0 ? `<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
+      ${isInvest && stocks.length > 0 ? `
+      <div style="border-top:1px solid var(--border);padding-top:10px">
+        <div style="font-size:10px;color:var(--blue);font-family:'IBM Plex Mono',monospace;margin-bottom:8px">📈 หุ้นที่ถืออยู่</div>
+        ${stocks.map(st=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+          <div style="flex:1;font-weight:600">${escHtml(st.symbol)}</div>
+          <div style="color:var(--text2);font-size:12px">${st.qty} หุ้น × ฿${fmtFull(st.price)}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--blue)">฿${fmtFull(st.price*st.qty)}</div>
+          <button onclick="deleteStock(${st.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 5px">×</button>
+        </div>`).join('')}
+        <div style="display:flex;justify-content:space-between;padding-top:6px;font-size:12px;font-weight:600">
+          <span style="color:var(--text2)">รวมราคาทุน</span>
+          <span style="font-family:'IBM Plex Mono',monospace;color:var(--blue)">฿${fmtFull(totalCost)}</span>
+        </div>
+      </div>` : ''}
+      ${txs.length > 0 && !isInvest ? `<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
         <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-family:'IBM Plex Mono',monospace">${txs.length} รายการ · ล่าสุด</div>
         ${txs.slice(0,3).map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)">
           <span style="color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px">${escHtml(t.desc)}</span>
@@ -3497,9 +3529,16 @@ function renderWallets() {
         </div>`).join('')}
       </div>` : ''}
     </div>`;
-  }).join('');
+  };
 
-  html += `</div>`;
+  if (normalWallets.length > 0) {
+    html += normalWallets.map(renderWalletCard).join('');
+  }
+  if (investWallets.length > 0) {
+    html += `<div style="font-size:10px;color:var(--blue);font-family:'IBM Plex Mono',monospace;letter-spacing:0.08em;margin:12px 0 8px">📈 บัญชีลงทุน (ไม่นับรวมคงเหลือ)</div>`;
+    html += investWallets.map(renderWalletCard).join('');
+  }
+  html += '</div>';
 
   // แสดงรายการที่ยังไม่ได้ผูกบัญชี
   if (noWalletIncome > 0 || noWalletExpense > 0) {
@@ -3517,12 +3556,95 @@ function renderWallets() {
 }
 
 /* ============================
+   STOCK HOLDINGS
+   ============================ */
+function openAddStock(walletId) {
+  const w = wallets.find(x=>x.id===walletId); if(!w) return;
+  let modal = document.getElementById('add-stock-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'add-stock-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `<div class="modal" style="max-width:360px">
+      <div class="modal-header">
+        <div class="modal-title" id="asm-title">เพิ่มหุ้น</div>
+        <button class="btn sm" onclick="document.getElementById('add-stock-modal').classList.remove('open')">✕</button>
+      </div>
+      <div style="margin-bottom:8px">
+        <input type="text" id="asm-symbol" placeholder="ชื่อหุ้น / Ticker เช่น PTT, KBANK, BTC" style="margin-bottom:7px;text-transform:uppercase">
+        <div class="form-grid form-2">
+          <input type="number" id="asm-qty" placeholder="จำนวนหุ้น" min="0" inputmode="decimal">
+          <input type="number" id="asm-price" placeholder="ราคาทุนต่อหุ้น (฿)" min="0" inputmode="decimal">
+        </div>
+      </div>
+      <div id="asm-preview" style="background:var(--surface2);border-radius:var(--radius-xs);padding:10px;font-size:13px;margin-bottom:12px;display:none">
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--text2)">ราคาทุนรวม</span>
+          <span id="asm-total" style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--blue)"></span>
+        </div>
+      </div>
+      <button class="btn primary" onclick="confirmAddStock()" style="width:100%">+ บันทึกหุ้น</button>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('open'); });
+    // live preview
+    ['asm-qty','asm-price'].forEach(id=>{
+      document.getElementById(id).addEventListener('input', ()=>{
+        const q=parseFloat(document.getElementById('asm-qty').value)||0;
+        const p=parseFloat(document.getElementById('asm-price').value)||0;
+        const preview=document.getElementById('asm-preview');
+        if(q>0&&p>0){ preview.style.display='block'; document.getElementById('asm-total').textContent='฿'+fmtFull(q*p); }
+        else preview.style.display='none';
+      });
+    });
+  }
+  modal._walletId = walletId;
+  document.getElementById('asm-title').textContent = '📈 เพิ่มหุ้น — '+w.name;
+  document.getElementById('asm-symbol').value='';
+  document.getElementById('asm-qty').value='';
+  document.getElementById('asm-price').value='';
+  document.getElementById('asm-preview').style.display='none';
+  modal.classList.add('open');
+  setTimeout(()=>document.getElementById('asm-symbol').focus(),100);
+}
+
+function confirmAddStock() {
+  const modal = document.getElementById('add-stock-modal');
+  const wId = modal._walletId;
+  const symbol = document.getElementById('asm-symbol').value.trim().toUpperCase();
+  const qty    = parseFloat(document.getElementById('asm-qty').value);
+  const price  = parseFloat(document.getElementById('asm-price').value);
+  if (!symbol||!qty||!price||isNaN(qty)||isNaN(price)) { alert('กรอกข้อมูลให้ครบค่ะ'); return; }
+  // Check if already exists - update qty
+  const existing = stockHoldings.find(s=>s.walletId===wId&&s.symbol===symbol);
+  if (existing) {
+    // Average cost calculation
+    const totalCost = existing.price*existing.qty + price*qty;
+    existing.qty += qty;
+    existing.price = totalCost / existing.qty;
+  } else {
+    stockHoldings.push({ id:Date.now(), walletId:wId, symbol, qty, price });
+  }
+  localStorage.setItem('knm_stocks', JSON.stringify(stockHoldings));
+  modal.classList.remove('open');
+  renderWallets();
+}
+
+function deleteStock(id) {
+  stockHoldings = stockHoldings.filter(s=>s.id!==id);
+  localStorage.setItem('knm_stocks', JSON.stringify(stockHoldings));
+  renderWallets();
+}
+
+/* ============================
    BALANCE BREAKDOWN
    ============================ */
 function showBalanceBreakdown() {
   const totalIncome  = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const totalExpense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  const balance = totalIncome - totalExpense;
+  const balance = wallets.length > 0
+    ? wallets.filter(w=>w.type!=='invest').reduce((s,w)=>s+getWalletBalance(w.id), 0)
+    : (totalIncome - totalExpense);
 
   let modal = document.getElementById('balance-breakdown-modal');
   if (!modal) {
