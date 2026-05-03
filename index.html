@@ -1588,7 +1588,7 @@ function escAttr(s) { return String(s).replace(/'/g,"\\'"); }
 function goTo(app) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + app).classList.add('active');
-  if (app === 'budget') { updateCatList(); updatePersonList(); renderBudgetDashboard(); renderTransactions(); }
+  if (app === 'budget') { updateCatList(); updatePersonList(); renderBudgetDashboard(); renderTransactions(); renderWallets(); }
   if (app === 'todo') renderTodo();
   if (app === 'manga') { populateSiteFilter(); renderRankView(); renderMangaReading(); }
   if (app === 'calendar') renderCalendar();
@@ -1635,10 +1635,12 @@ function switchBudgetTab(t) {
   document.querySelector(`#page-budget .nav-btn[onclick="switchBudgetTab('${t}')"]`).classList.add('active');
   document.getElementById('btab-' + t).classList.add('active');
   document.getElementById('budget-scroll').scrollTop = 0;
-  if (t==='dashboard') renderBudgetDashboard();
-  if (t==='transactions') { updateCatList(); renderTransactions(); }
+  if (t==='dashboard')     renderBudgetDashboard();
+  if (t==='transactions')  { updateCatList(); renderTransactions(); }
   if (t==='reimbursement') { updatePersonList(); renderReimbursement(); }
-  if (t==='debt') renderDebt();
+  if (t==='debt')          renderDebt();
+  if (t==='recurring')     renderRecurring();
+  if (t==='wallets')       { updateCatList(); renderWallets(); }
 }
 
 function updateCatList() {
