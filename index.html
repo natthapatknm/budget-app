@@ -679,6 +679,9 @@ tr:hover td { background: var(--surface2); }
           <input type="number" id="t-amount" placeholder="จำนวนเงิน (฿)" min="0" inputmode="decimal">
           <input type="date" id="t-date">
         </div>
+        <select id="t-wallet" style="margin-bottom:7px">
+          <option value="">— ไม่ระบุบัญชี —</option>
+        </select>
         <div class="btn-row"><button class="btn primary" onclick="addTransaction()">+ เพิ่ม</button></div>
       </div>
       <div class="card">
@@ -1641,6 +1644,13 @@ function switchBudgetTab(t) {
 function updateCatList() {
   const cats = [...new Set(transactions.map(t=>t.cat).filter(Boolean))];
   document.getElementById('cat-list').innerHTML = cats.map(c=>`<option value="${escHtml(c)}">`).join('');
+  // Update wallet dropdown in transaction form
+  const sel = document.getElementById('t-wallet');
+  if (sel) {
+    const currentVal = sel.value;
+    sel.innerHTML = '<option value="">— ไม่ระบุบัญชี —</option>' +
+      wallets.map(w=>`<option value="${w.id}" ${currentVal==w.id?'selected':''}>${w.icon} ${escHtml(w.name)}</option>`).join('');
+  }
 }
 function updatePersonList() {
   const names = [...new Set(reimbursements.map(r=>r.person).filter(Boolean))];
@@ -1655,10 +1665,13 @@ function addTransaction() {
   const amount = parseFloat(document.getElementById('t-amount').value);
   const date = document.getElementById('t-date').value;
   if (!desc || !amount || isNaN(amount) || amount <= 0 || !date) { alert('กรุณากรอกรายละเอียด จำนวนเงิน และวันที่ค่ะ'); return; }
-  transactions.unshift({ id: Date.now(), type, cat: cat||'ทั่วไป', desc, amount, date, received: true });
+  const walletId = parseInt(document.getElementById('t-wallet').value) || null;
+  transactions.unshift({ id: Date.now(), type, cat: cat||'ทั่วไป', desc, amount, date, received: true, walletId });
   saveBudget();
   ['t-cat','t-desc','t-amount'].forEach(id => document.getElementById(id).value='');
   updateCatList(); renderTransactions(); renderBudgetDashboard();
+  // refresh wallet if open
+  if (document.getElementById('btab-wallets').classList.contains('active')) renderWallets();
 }
 function toggleTxReceived(id) {
   const t = transactions.find(x=>x.id===id); if(!t) return;
@@ -2011,7 +2024,7 @@ function renderBudgetDashboard() {
   const totalExpense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
   // คงเหลือ = รายรับทั้งหมด - รายจ่ายทั้งหมด
   const balance = totalIncome - totalExpense;
-  const pendingIncome = transactions.filter(t=>t.type==='income'&&t.received===false).reduce((s,t)=>s+t.amount,0);
+  const pendingIncome = 0; // removed pending concept
   const pendingReimb = reimbursements.filter(r=>r.status==='pending').reduce((s,r)=>s+r.amount,0);
   const monthlyFixed = (typeof recurringList !== 'undefined') ? recurringList.filter(r=>r.cycle==='monthly').reduce((s,r)=>s+r.amount,0) : 0;
   const totalDebtLeft = debts.reduce((s,d)=>s+(d.amount-(d.paid||0)),0);
@@ -2019,6 +2032,7 @@ function renderBudgetDashboard() {
     <div class="metric"><div class="metric-label">รายรับทั้งหมด</div><div class="metric-value g">฿${fmt(totalIncome)}</div></div>
     <div class="metric"><div class="metric-label">รายจ่ายทั้งหมด</div><div class="metric-value r">฿${fmt(totalExpense)}</div></div>
     <div class="metric"><div class="metric-label">คงเหลือ</div><div class="metric-value ${balance>=0?'g':'r'}">฿${fmt(balance)}</div></div>
+    ${wallets.length>0?`<div class="metric"><div class="metric-label">ยอดรวมในบัญชี</div><div class="metric-value g">฿${fmt(wallets.reduce((s,w)=>s+getWalletBalance(w.id),0))}</div></div>`:''}
     <div class="metric"><div class="metric-label">สำรองค้างรับ</div><div class="metric-value b">฿${fmt(pendingReimb)}</div></div>
     <div class="metric"><div class="metric-label">หนี้ค้างชำระ</div><div class="metric-value p">฿${fmt(totalDebtLeft)}</div></div>
     <div class="metric"><div class="metric-label">ค่าใช้จ่ายประจำ/ด</div><div class="metric-value r">฿${fmt(monthlyFixed)}</div></div>`;
