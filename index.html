@@ -3319,13 +3319,39 @@ function addWallet() {
   wallets.push({ id: Date.now(), name, icon, note, initBalance: init });
   localStorage.setItem('knm_wallets', JSON.stringify(wallets));
   ['wl-name','wl-icon','wl-init','wl-note'].forEach(id => document.getElementById(id).value = '');
+  // scroll to see new wallet
   renderWallets();
+  document.getElementById('wallet-overview').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 function deleteWallet(id) {
-  if (!confirm('ลบบัญชีนี้?\n(รายการที่ผูกกับบัญชีนี้จะยังอยู่ในรายรับ-รายจ่าย)')) return;
-  wallets = wallets.filter(w => w.id !== id);
+  const w = wallets.find(x=>x.id===id); if(!w) return;
+  let modal = document.getElementById('del-wallet-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'del-wallet-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `<div class="modal" style="max-width:320px;text-align:center">
+      <div style="font-size:32px;margin-bottom:10px">🗑️</div>
+      <div class="modal-title" style="margin-bottom:8px" id="dwm-name"></div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:20px">รายการที่ผูกไว้จะยังอยู่ในรายรับ-จ่ายนะคะ</div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button class="btn danger" onclick="confirmDeleteWallet()" style="flex:1">ลบเลย</button>
+        <button class="btn" onclick="document.getElementById('del-wallet-modal').classList.remove('open')" style="flex:1">ยกเลิก</button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('open'); });
+  }
+  modal._id = id;
+  document.getElementById('dwm-name').textContent = w.icon+' '+w.name;
+  modal.classList.add('open');
+}
+function confirmDeleteWallet() {
+  const modal = document.getElementById('del-wallet-modal');
+  wallets = wallets.filter(w => w.id !== modal._id);
   localStorage.setItem('knm_wallets', JSON.stringify(wallets));
+  modal.classList.remove('open');
   renderWallets();
 }
 
@@ -3404,6 +3430,9 @@ function confirmWalletTx() {
 
 function renderWallets() {
   const el = document.getElementById('wallet-overview');
+  if (!el) return;
+  // Always reload fresh from localStorage
+  wallets = JSON.parse(localStorage.getItem('knm_wallets')||'[]');
   if (!wallets.length) {
     el.innerHTML = `<div class="card" style="text-align:center;padding:2rem">
       <div style="font-size:40px;margin-bottom:10px">👛</div>
@@ -3419,39 +3448,49 @@ function renderWallets() {
   const noWalletIncome  = transactions.filter(t => !t.walletId && t.type === 'income').reduce((s,t) => s + t.amount, 0);
   const noWalletExpense = transactions.filter(t => !t.walletId && t.type === 'expense').reduce((s,t) => s + t.amount, 0);
 
-  let html = `
-    <div style="background:linear-gradient(135deg,var(--surface),var(--surface2));border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:12px">
-      <div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:4px">ยอดรวมทุกบัญชี</div>
-      <div style="font-size:28px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${totalAll>=0?'var(--green)':'var(--red)'}">฿${fmtFull(totalAll)}</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:4px">${wallets.length} บัญชี</div>
+  // Summary bar
+  let html = `<div style="background:linear-gradient(135deg,var(--surface),var(--surface2));border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:3px">ยอดรวมทุกบัญชี</div>
+      <div style="font-size:24px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${totalAll>=0?'var(--green)':'var(--red)'}">฿${fmtFull(totalAll)}</div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:12px">`;
+    <div style="font-size:12px;color:var(--text3)">${wallets.length} บัญชี</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">`;
 
   html += wallets.map(w => {
-    const bal  = getWalletBalance(w.id);
-    const txs  = getWalletTxs(w.id);
-    const inc  = txs.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
-    const exp  = txs.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
-    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;transition:all 0.15s">
-      <div style="font-size:28px;margin-bottom:6px">${w.icon}</div>
-      <div style="font-size:13px;font-weight:600;margin-bottom:2px">${escHtml(w.name)}</div>
-      <div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${bal>=0?'var(--green)':'var(--red)'};margin-bottom:8px">฿${fmtFull(bal)}</div>
-      <div style="font-size:10px;color:var(--text3);margin-bottom:8px;display:flex;gap:8px">
-        <span style="color:var(--green)">+฿${fmt(inc)}</span>
-        <span style="color:var(--red)">−฿${fmt(exp)}</span>
-        <span>${txs.length} รายการ</span>
+    const bal = getWalletBalance(w.id);
+    const txs = getWalletTxs(w.id);
+    const inc = txs.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
+    const exp = txs.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px">
+      <!-- Row 1: icon + name + balance -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <div style="font-size:28px;flex-shrink:0">${w.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600">${escHtml(w.name)}</div>
+          ${w.note?`<div style="font-size:11px;color:var(--text3)">${escHtml(w.note)}</div>`:''}
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:20px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${bal>=0?'var(--green)':'var(--red)'}">฿${fmtFull(bal)}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">
+            <span style="color:var(--green)">+฿${fmt(inc)}</span>
+            <span style="color:var(--text3)"> / </span>
+            <span style="color:var(--red)">−฿${fmt(exp)}</span>
+          </div>
+        </div>
       </div>
-      <div style="display:flex;gap:5px">
-        <button class="btn sm primary" onclick="openWalletAddTx(${w.id})" style="flex:1;font-size:11px">+ เพิ่ม</button>
-        <button class="btn sm danger" onclick="deleteWallet(${w.id})" style="font-size:11px">ลบ</button>
+      <!-- Row 2: buttons -->
+      <div style="display:flex;gap:8px">
+        <button class="btn primary" onclick="openWalletAddTx(${w.id})" style="flex:1;font-size:13px">+ เพิ่มรายการ</button>
+        <button class="btn danger" onclick="deleteWallet(${w.id})" style="padding:8px 14px;font-size:13px">ลบบัญชี</button>
       </div>
-      ${txs.length > 0 ? `
-      <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-family:'IBM Plex Mono',monospace">รายการล่าสุด</div>
-        ${txs.slice(0,3).map(t=>`
-        <div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border)">
-          <span style="color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px">${escHtml(t.desc)}</span>
-          <span class="${t.type==='income'?'amount-pos':'amount-neg'}" style="font-size:11px">${t.type==='income'?'+':'−'}฿${fmt(t.amount)}</span>
+      <!-- Row 3: recent txs -->
+      ${txs.length > 0 ? `<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-family:'IBM Plex Mono',monospace">${txs.length} รายการ · ล่าสุด</div>
+        ${txs.slice(0,3).map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)">
+          <span style="color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px">${escHtml(t.desc)}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-weight:600;flex-shrink:0" class="${t.type==='income'?'amount-pos':'amount-neg'}">${t.type==='income'?'+':'−'}฿${fmt(t.amount)}</span>
         </div>`).join('')}
       </div>` : ''}
     </div>`;
