@@ -1301,6 +1301,28 @@ tr:hover td { background: var(--surface2); }
 </div>
 
 
+<!-- WALLET DETAIL MODAL -->
+<div class="modal-overlay" id="wallet-detail-modal">
+  <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">
+    <div class="modal-header" style="position:sticky;top:0;background:var(--surface);z-index:10;padding-bottom:10px">
+      <div>
+        <div class="modal-title" id="wdm-title"></div>
+        <div style="font-size:12px;color:var(--text3)" id="wdm-sub"></div>
+      </div>
+      <button class="btn sm" onclick="document.getElementById('wallet-detail-modal').classList.remove('open')">✕ ปิด</button>
+    </div>
+    <!-- Stats row -->
+    <div id="wdm-stats" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap"></div>
+    <!-- Charts -->
+    <div id="wdm-charts" style="margin-bottom:14px"></div>
+    <!-- Transaction list -->
+    <div>
+      <div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:8px;letter-spacing:0.05em">รายการทั้งหมด</div>
+      <div id="wdm-txlist"></div>
+    </div>
+  </div>
+</div>
+
 <!-- PERSON MODAL -->
 <div class="modal-overlay" id="person-modal">
   <div class="modal">
@@ -3485,7 +3507,7 @@ function renderWallets() {
     const stocks = (stockHoldings||[]).filter(s=>s.walletId===w.id);
     const totalCost = stocks.reduce((s,st)=>s+(st.price*st.qty),0);
     return `<div style="background:var(--surface);border:1px solid ${isInvest?'var(--blue)':'var(--border)'};border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <div onclick="openWalletDetail(${w.id})" style="display:flex;align-items:center;gap:12px;margin-bottom:10px;cursor:pointer">
         <div style="font-size:28px;flex-shrink:0">${w.icon||'💰'}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px">
@@ -3493,6 +3515,7 @@ function renderWallets() {
             ${isInvest?'<span style="font-size:10px;background:var(--blue-bg);color:var(--blue);padding:2px 6px;border-radius:20px">ลงทุน</span>':''}
           </div>
           ${w.note?`<div style="font-size:11px;color:var(--text3)">${escHtml(w.note)}</div>`:''}
+          <div style="font-size:10px;color:var(--gold);margin-top:3px">กดดูรายละเอียด →</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:20px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${bal>=0?'var(--green)':'var(--red)'}">฿${fmtFull(bal)}</div>
@@ -3634,6 +3657,140 @@ function deleteStock(id) {
   stockHoldings = stockHoldings.filter(s=>s.id!==id);
   localStorage.setItem('knm_stocks', JSON.stringify(stockHoldings));
   renderWallets();
+}
+
+/* ============================
+   WALLET DETAIL VIEW
+   ============================ */
+let wdmPieChart = null, wdmBarChart = null;
+
+function openWalletDetail(walletId) {
+  const w = wallets.find(x=>x.id===walletId); if(!w) return;
+  const txs = getWalletTxs(walletId);
+  const bal = getWalletBalance(walletId);
+  const inc = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const exp = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+
+  // Header
+  document.getElementById('wdm-title').textContent = (w.icon||'💰')+' '+w.name;
+  document.getElementById('wdm-sub').textContent = txs.length+' รายการ';
+
+  // Stats
+  document.getElementById('wdm-stats').innerHTML = `
+    <div style="flex:1;min-width:90px;background:var(--green-bg);border-radius:var(--radius-xs);padding:10px 12px">
+      <div style="font-size:9px;color:var(--green);font-family:'IBM Plex Mono',monospace;margin-bottom:3px">ยอดคงเหลือ</div>
+      <div style="font-size:18px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${bal>=0?'var(--green)':'var(--red)'}">฿${fmtFull(bal)}</div>
+    </div>
+    <div style="flex:1;min-width:90px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px 12px">
+      <div style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:3px">รายรับรวม</div>
+      <div style="font-size:18px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--green)">฿${fmtFull(inc)}</div>
+    </div>
+    <div style="flex:1;min-width:90px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px 12px">
+      <div style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:3px">รายจ่ายรวม</div>
+      <div style="font-size:18px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--red)">฿${fmtFull(exp)}</div>
+    </div>`;
+
+  // Build charts
+  const chartDiv = document.getElementById('wdm-charts');
+  chartDiv.innerHTML = '';
+
+  // Expense by category - pie
+  const cats = {};
+  txs.filter(t=>t.type==='expense').forEach(t=>{ cats[t.cat]=(cats[t.cat]||0)+t.amount; });
+  const catKeys = Object.keys(cats).sort((a,b)=>cats[b]-cats[a]);
+  const colors = ['#c9a84c','#e05c3a','#4a9e6a','#4a7eb8','#8a5ec8','#c88a3a','#1a6b6b','#e05c8a'];
+
+  if (catKeys.length > 0) {
+    // Pie chart container
+    const pieWrap = document.createElement('div');
+    pieWrap.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px';
+    pieWrap.innerHTML = `
+      <div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:10px">สัดส่วนรายจ่ายตามหมวด</div>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <div style="position:relative;width:130px;height:130px;flex-shrink:0">
+          <canvas id="wdm-pie"></canvas>
+        </div>
+        <div style="flex:1;min-width:120px">
+          ${catKeys.map((k,i)=>{
+            const pct = exp>0?Math.round(cats[k]/exp*100):0;
+            return `<div style="margin-bottom:8px">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+                <span style="display:flex;align-items:center;gap:5px">
+                  <span style="width:8px;height:8px;border-radius:2px;background:${colors[i%colors.length]};display:inline-block"></span>
+                  ${escHtml(k)}
+                </span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-weight:600">${pct}%</span>
+              </div>
+              <div style="background:var(--surface3);border-radius:3px;height:5px;overflow:hidden">
+                <div style="height:100%;width:${pct}%;background:${colors[i%colors.length]};border-radius:3px"></div>
+              </div>
+              <div style="font-size:10px;color:var(--text3);margin-top:1px">฿${fmtFull(cats[k])}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    chartDiv.appendChild(pieWrap);
+
+    setTimeout(()=>{
+      if(wdmPieChart) wdmPieChart.destroy();
+      const ctx = document.getElementById('wdm-pie');
+      if(ctx) wdmPieChart = new Chart(ctx, {
+        type:'doughnut',
+        data:{ labels:catKeys, datasets:[{ data:catKeys.map(k=>Math.round(cats[k])), backgroundColor:catKeys.map((_,i)=>colors[i%colors.length]), borderWidth:0 }] },
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
+      });
+    },100);
+  }
+
+  // Income by category
+  const incCats = {};
+  txs.filter(t=>t.type==='income').forEach(t=>{ incCats[t.cat]=(incCats[t.cat]||0)+t.amount; });
+  const incKeys = Object.keys(incCats).sort((a,b)=>incCats[b]-incCats[a]);
+  const incColors = ['#4a9e6a','#c9a84c','#4a7eb8','#8a5ec8'];
+  if (incKeys.length > 0) {
+    const incWrap = document.createElement('div');
+    incWrap.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px';
+    incWrap.innerHTML = `
+      <div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:8px">สัดส่วนรายรับตามหมวด</div>
+      ${incKeys.map((k,i)=>{
+        const pct = inc>0?Math.round(incCats[k]/inc*100):0;
+        return `<div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+            <span style="display:flex;align-items:center;gap:5px">
+              <span style="width:8px;height:8px;border-radius:2px;background:${incColors[i%incColors.length]};display:inline-block"></span>
+              ${escHtml(k)}
+            </span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-weight:600">${pct}% · ฿${fmtFull(incCats[k])}</span>
+          </div>
+          <div style="background:var(--surface3);border-radius:3px;height:6px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${incColors[i%incColors.length]};border-radius:3px"></div>
+          </div>
+        </div>`;
+      }).join('')}`;
+    chartDiv.appendChild(incWrap);
+  }
+
+  // Transaction list
+  const listEl = document.getElementById('wdm-txlist');
+  if (!txs.length) {
+    listEl.innerHTML = '<p style="text-align:center;color:var(--text3);font-size:13px;padding:1rem">ยังไม่มีรายการค่ะ</p>';
+  } else {
+    listEl.innerHTML = txs.map(t=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+        <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:${t.type==='income'?'var(--green-bg)':'var(--red-bg)'};display:flex;align-items:center;justify-content:center;font-size:14px">
+          ${t.type==='income'?'↑':'↓'}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(t.desc)}</div>
+          <div style="font-size:10px;color:var(--text3)">${fmtDate(t.date)} · ${escHtml(t.cat)}</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;flex-shrink:0" class="${t.type==='income'?'amount-pos':'amount-neg'}">
+          ${t.type==='income'?'+':'−'}฿${fmtFull(t.amount)}
+        </div>
+      </div>`).join('');
+  }
+
+  document.getElementById('wallet-detail-modal').classList.add('open');
 }
 
 /* ============================
