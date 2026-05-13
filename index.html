@@ -705,9 +705,14 @@ tr:hover td { background: var(--surface2); }
           <datalist id="person-list"></datalist>
           <input type="text" id="r-desc" placeholder="รายละเอียด">
         </div>
-        <div class="form-grid form-3">
+        <div class="form-grid form-2">
           <input type="number" id="r-amount" placeholder="จำนวนเงิน (฿)" min="0" inputmode="decimal">
           <input type="date" id="r-date">
+        </div>
+        <div class="form-grid form-2">
+          <select id="r-wallet-out">
+            <option value="">— บัญชีที่สำรองจ่าย (ไม่บังคับ) —</option>
+          </select>
           <input type="text" id="r-note" placeholder="หมายเหตุ">
         </div>
         <div class="btn-row"><button class="btn primary" onclick="addReimbursement()">+ เพิ่ม</button></div>
@@ -1686,6 +1691,20 @@ function updateCatList() {
 function updatePersonList() {
   const names = [...new Set(reimbursements.map(r=>r.person).filter(Boolean))];
   document.getElementById('person-list').innerHTML = names.map(n=>`<option value="${escHtml(n)}">`).join('');
+  // populate wallet dropdowns
+  const walletOpts = wallets.map(w=>`<option value="${w.id}">${w.icon||'💰'} ${escHtml(w.name)}</option>`).join('');
+  const outSel = document.getElementById('r-wallet-out');
+  if (outSel) {
+    const cur = outSel.value;
+    outSel.innerHTML = '<option value="">— บัญชีที่สำรองจ่าย (ไม่บังคับ) —</option>' + walletOpts;
+    if (cur) outSel.value = cur;
+  }
+  const inSel = document.getElementById('rm-wallet-in');
+  if (inSel) {
+    const cur = inSel.value;
+    inSel.innerHTML = '<option value="">— เลือกบัญชีที่รับเงินคืน (ไม่บังคับ) —</option>' + walletOpts;
+    if (cur) inSel.value = cur;
+  }
 }
 
 /* TRANSACTIONS */
@@ -1738,15 +1757,26 @@ function renderTransactions() {
 
 /* REIMBURSEMENT */
 function addReimbursement() {
-  const person = document.getElementById('r-person').value.trim();
-  const desc = document.getElementById('r-desc').value.trim();
-  const amount = parseFloat(document.getElementById('r-amount').value);
-  const date = document.getElementById('r-date').value;
-  const note = document.getElementById('r-note').value.trim();
+  const person   = document.getElementById('r-person').value.trim();
+  const desc     = document.getElementById('r-desc').value.trim();
+  const amount   = parseFloat(document.getElementById('r-amount').value);
+  const date     = document.getElementById('r-date').value;
+  const note     = document.getElementById('r-note').value.trim();
+  const walletId = parseInt(document.getElementById('r-wallet-out').value) || null;
   if (!person||!desc||!amount||isNaN(amount)||amount<=0||!date) { alert('กรุณากรอกข้อมูลให้ครบค่ะ'); return; }
-  reimbursements.unshift({ id: Date.now(), person, desc, amount, date, note, status:'pending' });
+  const rid = Date.now();
+  reimbursements.unshift({ id: rid, person, desc, amount, date, note, status:'pending', walletOutId: walletId });
+  // หักรายจ่ายจากบัญชีที่สำรองจ่าย
+  if (walletId) {
+    transactions.unshift({
+      id: rid+1, type:'expense', cat:'สำรองจ่าย',
+      desc: '[สำรอง] '+desc+' ให้ '+person,
+      amount, date, received: true, walletId, reimbId: rid
+    });
+  }
   saveBudget();
-  ['r-person','r-desc','r-amount','r-note'].forEach(id => document.getElementById(id).value='');
+  ['r-person','r-desc','r-amount','r-note'].forEach(i => document.getElementById(i).value='');
+  if (walletId) renderWallets();
   updatePersonList(); renderReimbursement();
 }
 function toggleRStatus(id) {
@@ -1778,10 +1808,15 @@ function openReceiveModal(id) {
         <button class="btn sm" onclick="document.getElementById('receive-modal').classList.remove('open')">✕</button>
       </div>
       <div id="rm-info" style="margin-bottom:12px;font-size:13px;color:var(--text2)"></div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <input type="number" id="rm-amount" placeholder="จำนวนที่รับมา (฿)" min="0" inputmode="decimal"
-          style="flex:1;padding:9px 11px;font-size:15px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text)">
-        <button class="btn primary" onclick="confirmReceive()">ยืนยัน</button>
+      <div style="margin-bottom:8px">
+        <select id="rm-wallet-in" style="width:100%;padding:8px 11px;font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text);margin-bottom:8px">
+          <option value="">— เลือกบัญชีที่รับเงินคืน (ไม่บังคับ) —</option>
+        </select>
+        <div style="display:flex;gap:8px">
+          <input type="number" id="rm-amount" placeholder="จำนวนที่รับมา (฿)" min="0" inputmode="decimal"
+            style="flex:1;padding:9px 11px;font-size:15px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text)">
+          <button class="btn primary" onclick="confirmReceive()">ยืนยัน</button>
+        </div>
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn sm" onclick="confirmReceiveFull()" style="color:var(--green);border-color:var(--green-bg);flex:1">รับครบทั้งหมด ฿<span id='rm-full'></span></button>
@@ -1813,6 +1848,14 @@ function openReceiveModal(id) {
     <div style="margin-top:8px;background:var(--surface2);border-radius:4px;height:8px;overflow:hidden">
       <div style="height:100%;width:${pct}%;background:var(--green);border-radius:4px;transition:width 0.3s"></div>
     </div>`;
+  // populate wallet-in dropdown
+  const inSel = document.getElementById('rm-wallet-in');
+  if (inSel) {
+    inSel.innerHTML = '<option value="">— เลือกบัญชีที่รับเงินคืน —</option>' +
+      wallets.map(w=>`<option value="${w.id}">${w.icon||'💰'} ${escHtml(w.name)}</option>`).join('');
+    // default to same wallet as where money was paid out
+    if (r.walletOutId) inSel.value = r.walletOutId;
+  }
   modal.classList.add('open');
   setTimeout(() => document.getElementById('rm-amount').focus(), 100);
 }
@@ -1820,34 +1863,50 @@ function openReceiveModal(id) {
 function confirmReceive() {
   const modal = document.getElementById('receive-modal');
   const id = modal._currentId;
-  const r = reimbursements.find(x=>x.id===id);
-  if (!r) return;
+  const r = reimbursements.find(x=>x.id===id); if (!r) return;
   const amt = parseFloat(document.getElementById('rm-amount').value);
+  const walletInId = parseInt(document.getElementById('rm-wallet-in').value) || null;
   if (!amt || isNaN(amt) || amt <= 0) { alert('กรุณาใส่จำนวนเงินค่ะ'); return; }
   const alreadyReceived = r.received || 0;
   const remaining = r.amount - alreadyReceived;
-  if (amt > remaining) { alert('จำนวนมากกว่ายอดค้างค่ะ (ค้างอยู่ ฿' + fmtFull(remaining) + ')'); return; }
+  if (amt > remaining) { alert('จำนวนมากกว่ายอดค้างค่ะ'); return; }
   r.received = alreadyReceived + amt;
   r.status = r.received >= r.amount ? 'paid' : 'partial';
+  // เพิ่มรายรับเข้าบัญชีที่รับเงินคืน
+  if (walletInId) {
+    transactions.unshift({
+      id: Date.now(), type:'income', cat:'คืนเงินสำรอง',
+      desc: '[คืนเงิน] '+r.desc+' จาก '+r.person,
+      amount: amt, date: new Date().toISOString().split('T')[0],
+      received: true, walletId: walletInId, reimbId: r.id
+    });
+  }
   saveBudget(); renderReimbursement();
+  if (walletInId) renderWallets();
   modal.classList.remove('open');
 }
 
 function confirmReceiveFull() {
   const modal = document.getElementById('receive-modal');
   const id = modal._currentId;
-  const r = reimbursements.find(x=>x.id===id);
-  if (!r) return;
+  const r = reimbursements.find(x=>x.id===id); if (!r) return;
+  const walletInId = parseInt(document.getElementById('rm-wallet-in').value) || null;
+  const remaining = r.amount - (r.received || 0);
   r.received = r.amount;
   r.status = 'paid';
+  if (walletInId && remaining > 0) {
+    transactions.unshift({
+      id: Date.now(), type:'income', cat:'คืนเงินสำรอง',
+      desc: '[คืนเงิน] '+r.desc+' จาก '+r.person,
+      amount: remaining, date: new Date().toISOString().split('T')[0],
+      received: true, walletId: walletInId, reimbId: r.id
+    });
+  }
   saveBudget(); renderReimbursement();
+  if (walletInId) renderWallets();
   modal.classList.remove('open');
 }
-function deleteReimbursement(id) {
-  if (!confirm('ลบรายการนี้?')) return;
-  reimbursements = reimbursements.filter(r=>r.id!==id);
-  saveBudget(); renderReimbursement(); updatePersonList();
-}
+
 function renderReimbursement() {
   const pt = {};
   reimbursements.forEach(r => {
